@@ -14,11 +14,44 @@ STEPFUN_IMAGE_MODEL = os.environ.get("STEPFUN_IMAGE_MODEL", "step-image-edit-2")
 
 # ---------- 风格库（可替换 / 增减风格） ----------
 # 键 = 前端展示名，值 = 发送给模型的风格提示词
+# gender_prefix 会在生成时拼接（男/女不同 prompt）
 STYLES = {
-    "动漫": "japanese anime style, vibrant colors, clean line art, portrait",
-    "油画": "classical oil painting, impressionist, rich brushstroke texture, portrait",
-    "东方美学": "traditional chinese aesthetic, ink wash painting, elegant, portrait",
-    "赛博": "cyberpunk style, neon glow, futuristic, cinematic lighting, portrait",
+    "动漫少女": {
+        "prompt": "japanese anime style, vibrant colors, clean line art, beautiful detailed eyes, soft shading, cute portrait",
+        "gender": "female",
+        "emoji": "🌸",
+        "gradient": "linear-gradient(135deg, #ff9a9e, #fad0c4)",
+    },
+    "动漫少年": {
+        "prompt": "japanese anime style, vibrant colors, sharp line art, cool confident expression, detailed eyes, portrait",
+        "gender": "male",
+        "emoji": "⚔️",
+        "gradient": "linear-gradient(135deg, #667eea, #764ba2)",
+    },
+    "油画质感": {
+        "prompt": "classical oil painting, impressionist, rich brushstroke texture, renaissance portrait, warm lighting",
+        "gender": "neutral",
+        "emoji": "🎨",
+        "gradient": "linear-gradient(135deg, #f6d365, #fda085)",
+    },
+    "东方水墨": {
+        "prompt": "traditional chinese ink wash painting, elegant, minimalist, bamboo and mist, portrait",
+        "gender": "neutral",
+        "emoji": "🎋",
+        "gradient": "linear-gradient(135deg, #2c3e50, #4ca1af)",
+    },
+    "赛博朋克": {
+        "prompt": "cyberpunk style, neon glow, futuristic, cinematic lighting, holographic, portrait",
+        "gender": "neutral",
+        "emoji": "🌃",
+        "gradient": "linear-gradient(135deg, #ee0979, #ff6a00)",
+    },
+    "水彩梦境": {
+        "prompt": "soft watercolor painting, dreamy, pastel colors, gentle blending, artistic portrait",
+        "gender": "neutral",
+        "emoji": "💧",
+        "gradient": "linear-gradient(135deg, #a8edea, #fed6e3)",
+    },
 }
 
 # ---------- 吧唧尺寸 ----------

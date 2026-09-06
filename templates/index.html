@@ -5,361 +5,390 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>吧唧星球 BadgeVerse</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   :root{
-    --bg:#0f0f1a;--card:#1a1a2e;--accent:#7c3aed;--accent2:#ec4899;
-    --text:#f0f0f0;--muted:#8888aa;--radius:20px;
-    --success:#22c55e;--border:#333355;
+    --bg1:#0a0a12;--bg2:#131325;--card:#181830;--card2:#1e1e3c;
+    --accent:#7c3aed;--accent2:#ec4899;--accent3:#06b6d4;
+    --text:#f5f5fa;--muted:#9999bb;--muted2:#666688;
+    --radius:16px;--radius-lg:24px;
+    --success:#22c55e;--border:rgba(255,255,255,0.08);
+    --shadow:0 8px 32px rgba(0,0,0,0.4);
   }
-  body{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 50%,#16213e 100%);
-    color:var(--text);font-family:-apple-system,"Microsoft YaHei",sans-serif;
-    min-height:100vh;overflow-x:hidden}
-  .container{max-width:480px;margin:0 auto;padding:16px}
-  .header{text-align:center;padding:20px 0 12px}
-  .header h1{font-size:26px;font-weight:800;
-    background:linear-gradient(90deg,#7c3aed,#ec4899);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .header p{color:var(--muted);font-size:12px;margin-top:2px}
+  body{background:var(--bg1);color:var(--text);
+    font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;
+    min-height:100vh;overflow-x:hidden;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%,rgba(124,58,237,0.15),transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%,rgba(236,72,153,0.1),transparent)}
+  .container{max-width:420px;margin:0 auto;padding:0 16px 40px}
 
-  /* 步骤导航指示器 */
-  .step-nav{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
-  .step-indicator{width:32px;height:32px;border-radius:50%;
-    background:#222244;display:flex;align-items:center;justify-content:center;
-    font-size:13px;color:#666688;transition:all .3s;position:relative}
-  .step-indicator.active{background:linear-gradient(90deg,var(--accent),var(--accent2));
-    color:#fff;font-weight:700;transform:scale(1.1)}
-  .step-indicator.done{background:var(--success);color:#fff}
-  .step-indicator+.step-indicator::before{
-    content:'';position:absolute;left:-12px;top:50%;width:8px;height:2px;
-    background:#333355;transform:translateY(-50%)}
+  /* Header */
+  .header{text-align:center;padding:28px 0 16px}
+  .logo{font-size:30px;font-weight:900;letter-spacing:-0.5px;
+    background:linear-gradient(135deg,#7c3aed,#ec4899,#06b6d4);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-size:200% auto;animation:shimmer 3s linear infinite}
+  @keyframes shimmer{to{background-position:200% center}}
+  .subtitle{color:var(--muted2);font-size:12px;margin-top:4px;letter-spacing:1px}
 
-  /* 步骤容器 */
-  .step-section{display:none;animation:fadeIn .4s ease}
-  .step-section.active{display:block}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  /* Step progress */
+  .progress-bar{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px}
+  .step-dot{width:28px;height:28px;border-radius:50%;
+    background:var(--card2);display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;color:var(--muted2);transition:all .4s;border:2px solid transparent}
+  .step-dot.active{background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;transform:scale(1.15);box-shadow:0 0 12px rgba(124,58,237,0.5)}
+  .step-dot.done{background:var(--success);color:#fff}
+  .step-line{width:24px;height:2px;background:var(--border);margin:0 4px;transition:background .4s}
+  .step-line.done{background:var(--success)}
 
-  .card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;
-    box-shadow:0 4px 20px rgba(0,0,0,0.3)}
-  .card h2{font-size:16px;margin-bottom:12px;color:var(--accent2)}
+  /* Sections */
+  .step-section{display:none}
+  .step-section.active{display:block;animation:slideUp .5s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-  /* Step 1: 风格轮播 */
-  .style-carousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
-    padding:8px 0 12px;-webkit-overflow-scrolling:touch}
-  .style-carousel::-webkit-scrollbar{height:4px}
-  .style-carousel::-webkit-scrollbar-thumb{background:#333355;border-radius:2px}
-  .style-thumb{flex:0 0 80px;width:80px;height:80px;border-radius:50%;
-    border:3px solid transparent;cursor:pointer;overflow:hidden;
-    scroll-snap-align:center;transition:all .3s;position:relative}
-  .style-thumb img,.style-thumb .placeholder{
-    width:100%;height:100%;object-fit:cover;border-radius:50%}
-  .style-thumb .placeholder{display:flex;align-items:center;justify-content:center;
-    font-size:11px;color:var(--muted);background:linear-gradient(135deg,var(--accent),var(--accent2))}
-  .style-thumb.selected{border-color:var(--success);transform:scale(1.08)}
-  .style-thumb .label{position:absolute;bottom:0;left:0;right:0;
-    background:rgba(0,0,0,0.6);color:#fff;font-size:10px;text-align:center;padding:2px}
-  .bg-preview{width:200px;height:200px;border-radius:50%;margin:16px auto;
-    border:3px solid var(--accent);overflow:hidden;background:#222244;
-    display:flex;align-items:center;justify-content:center}
-  .bg-preview img{width:100%;height:100%;object-fit:cover}
-  .bg-preview .placeholder{color:var(--muted);font-size:13px}
+  .card{background:var(--card);border-radius:var(--radius-lg);padding:20px;margin-bottom:14px;
+    border:1px solid var(--border);box-shadow:var(--shadow)}
+  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;
+    display:flex;align-items:center;gap:6px}
+  .card-title .icon{font-size:18px}
 
-  /* Step 2: 上传 */
-  .upload-area{border:2px dashed #444466;border-radius:var(--radius);padding:32px;
-    text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
-  .upload-area:hover{border-color:var(--accent)}
-  .upload-area input[type=file]{display:none}
-  .upload-icon{font-size:36px;color:var(--accent);margin-bottom:8px}
+  /* Gender selector */
+  .gender-row{display:flex;gap:8px;margin-bottom:14px}
+  .gender-btn{flex:1;padding:10px;border-radius:12px;border:1px solid var(--border);
+    background:var(--card2);color:var(--muted);font-size:14px;text-align:center;
+    cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:4px}
+  .gender-btn.active{border-color:var(--accent);background:rgba(124,58,237,0.15);color:var(--text)}
+
+  /* Style grid */
+  .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .style-card{border-radius:14px;overflow:hidden;cursor:pointer;transition:all .3s;
+    border:2px solid transparent;position:relative;aspect-ratio:1}
+  .style-card .style-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:32px}
+  .style-card .style-label{position:absolute;bottom:0;left:0;right:0;
+    background:linear-gradient(transparent,rgba(0,0,0,0.7));color:#fff;font-size:13px;
+    font-weight:600;padding:16px 8px 8px;text-align:center}
+  .style-card.selected{border-color:var(--success);transform:scale(0.96)}
+  .style-card.selected::after{content:'✓';position:absolute;top:6px;right:6px;
+    width:22px;height:22px;border-radius:50%;background:var(--success);color:#fff;
+    font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+  /* Preview circle */
+  .preview-circle{width:160px;height:160px;border-radius:50%;margin:16px auto;
+    border:3px solid var(--accent);overflow:hidden;background:var(--card2);
+    display:flex;align-items:center;justify-content:center;position:relative}
+  .preview-circle img{width:100%;height:100%;object-fit:cover}
+  .preview-circle .ph{color:var(--muted2);font-size:13px;text-align:center}
+
+  /* Upload */
+  .upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);
+    padding:36px 20px;text-align:center;cursor:pointer;transition:all .3s}
+  .upload-zone:active{border-color:var(--accent);background:rgba(124,58,237,0.05)}
+  .upload-zone input[type=file]{display:none}
+  .upload-icon{font-size:36px;margin-bottom:8px}
   .upload-text{color:var(--muted);font-size:14px}
-  .person-preview{width:200px;height:200px;border-radius:50%;margin:16px auto;
-    border:3px solid var(--accent);overflow:hidden;display:none}
-  .person-preview img{width:100%;height:100%;object-fit:cover}
+  .upload-hint{color:var(--muted2);font-size:12px;margin-top:4px}
 
-  /* Step 3: 文字 */
-  .input-group{margin-bottom:12px}
-  .input-group label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  /* Text inputs */
+  .input-group{margin-bottom:10px}
+  .input-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
   .input-group input,.input-group select{
-    width:100%;background:#222244;border:1px solid var(--border);
-    border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px}
-  .select-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    width:100%;background:var(--card2);border:1px solid var(--border);
+    border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none}
+  .input-group input:focus,.input-group select:focus{border-color:var(--accent)}
+  .select-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 
-  /* Step 4: 生成 */
-  .btn-primary{width:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-    border:none;border-radius:14px;padding:16px;color:#fff;font-size:17px;font-weight:700;
-    cursor:pointer;transition:transform .2s}
-  .btn-primary:active{transform:scale(0.97)}
-  .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
-  .btn-secondary{width:100%;background:#222244;border:1px solid #444466;
-    border-radius:14px;padding:14px;color:var(--text);font-size:15px;
-    cursor:pointer;transition:all .3s}
-  .btn-secondary:active{transform:scale(0.97)}
-  .btn-nav{display:flex;gap:10px;margin-top:12px}
-  .btn-nav .btn-secondary{flex:1}
+  /* Canvas preview */
+  #canvas-preview{display:block;width:160px;height:160px;margin:12px auto;
+    border-radius:50%;border:2px solid var(--border);background:var(--card2)}
 
-  .result-preview{width:200px;height:200px;border-radius:50%;margin:16px auto;
-    border:3px solid var(--accent);overflow:hidden;display:none}
-  .result-preview img{width:100%;height:100%;object-fit:cover}
-  .pickup-display{text-align:center;padding:20px;display:none}
-  .pickup-code{font-size:24px;font-weight:800;color:var(--accent2);letter-spacing:2px}
-  .pickup-label{color:var(--muted);font-size:13px;margin-top:4px}
-  #canvas-preview{display:block;width:200px;height:200px;margin:12px auto;
-    border-radius:50%;border:2px solid var(--border);background:#222244}
-  .loading{display:none;text-align:center;padding:20px}
-  .spinner{width:40px;height:40px;border:3px solid #333355;border-top-color:var(--accent2);
-    border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px}
+  /* Buttons */
+  .btn{width:100%;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;
+    cursor:pointer;transition:all .2s;text-align:center}
+  .btn:active{transform:scale(0.97)}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .btn-ghost{background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;padding:14px}
+  .btn-row{display:flex;gap:8px}
+  .btn-row .btn{flex:1}
+  .btn:disabled{opacity:0.4;cursor:not-allowed}
+
+  /* Loading */
+  .loading{display:none;text-align:center;padding:24px 0}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent2);
+    border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{color:var(--muted);font-size:14px}
+
+  /* Result */
+  .result-area{display:none;text-align:center}
+  .result-circle{width:180px;height:180px;border-radius:50%;margin:0 auto 16px;
+    border:3px solid var(--accent);overflow:hidden;box-shadow:0 0 24px rgba(124,58,237,0.3)}
+  .result-circle img{width:100%;height:100%;object-fit:cover}
+  .pickup-box{background:var(--card2);border-radius:14px;padding:16px;margin-top:12px}
+  .pickup-label{color:var(--muted2);font-size:12px;letter-spacing:1px}
+  .pickup-code{font-size:22px;font-weight:800;color:var(--accent2);letter-spacing:2px;margin-top:2px}
+
+  /* Summary */
+  .summary{display:flex;gap:8px;margin-bottom:12px}
+  .summary-chip{flex:1;background:var(--card2);border-radius:10px;padding:8px;text-align:center}
+  .summary-chip .label{font-size:11px;color:var(--muted2)}
+  .summary-chip .value{font-size:13px;font-weight:600;color:var(--text);margin-top:2px}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h1>吧唧星球</h1>
-    <p>AI 现场自贩终端 · 三步做你的专属吧唧</p>
+    <div class="logo">吧唧星球</div>
+    <div class="subtitle">BADGE VERSE · AI 自贩终端</div>
   </div>
 
-  <!-- 步骤导航 -->
-  <div class="step-nav">
-    <div class="step-indicator active" data-step-nav="1">1</div>
-    <div class="step-indicator" data-step-nav="2">2</div>
-    <div class="step-indicator" data-step-nav="3">3</div>
-    <div class="step-indicator" data-step-nav="4">4</div>
+  <div class="progress-bar">
+    <div class="step-dot active" data-nav="1">1</div>
+    <div class="step-line" data-line="1"></div>
+    <div class="step-dot" data-nav="2">2</div>
+    <div class="step-line" data-line="2"></div>
+    <div class="step-dot" data-nav="3">3</div>
+    <div class="step-line" data-line="3"></div>
+    <div class="step-dot" data-nav="4">4</div>
   </div>
 
-  <!-- Step 1: 选背景 -->
-  <div class="step-section active" id="step-bg" data-step="background">
+  <!-- Step 1: 选风格 -->
+  <div class="step-section active" id="step-1">
     <div class="card">
-      <h2>选择风格</h2>
-      <div class="style-carousel" id="style-carousel">
-        {% for name in styles.keys() %}
-        <div class="style-thumb" data-style="{{ name }}">
-          <div class="placeholder">{{ name }}</div>
-          <div class="label">{{ name }}</div>
-        </div>
-        {% endfor %}
+      <div class="card-title"><span class="icon">🎨</span> 选择风格</div>
+      <div class="gender-row">
+        <div class="gender-btn active" data-gender="all">全部</div>
+        <div class="gender-btn" data-gender="female">女生</div>
+        <div class="gender-btn" data-gender="male">男生</div>
       </div>
-      <div class="bg-preview" id="bg-preview">
-        <span class="placeholder">点击上方选择风格</span>
-      </div>
-      <div class="btn-nav">
-        <button class="btn-primary" id="btn-bg-next" disabled>下一步：上传照片</button>
-      </div>
+      <div class="style-grid" id="style-grid"></div>
     </div>
+    <button class="btn btn-primary" id="btn-1-next" disabled>下一步 · 上传照片</button>
   </div>
 
-  <!-- Step 2: 确定人物 -->
-  <div class="step-section" id="step-person" data-step="person">
+  <!-- Step 2: 上传照片 -->
+  <div class="step-section" id="step-2">
     <div class="card">
-      <h2>上传你的照片</h2>
-      <label class="upload-area" id="upload-area">
-        <div id="upload-placeholder">
+      <div class="card-title"><span class="icon">📸</span> 上传你的照片</div>
+      <label class="upload-zone" id="upload-zone">
+        <div id="upload-default">
           <div class="upload-icon">📷</div>
           <div class="upload-text">点击拍照或从相册选择</div>
+          <div class="upload-hint">支持 JPG / PNG，建议正面清晰照</div>
+        </div>
+        <div id="upload-done" style="display:none">
+          <div class="preview-circle" style="margin:0">
+            <img id="person-img" src="" alt="">
+          </div>
         </div>
         <input type="file" id="file-input" accept="image/*">
       </label>
-      <div class="person-preview" id="person-preview">
-        <img id="person-img" src="" alt="">
-      </div>
-      <div class="btn-nav">
-        <button class="btn-secondary" id="btn-person-back">上一步</button>
-        <button class="btn-primary" id="btn-person-next" disabled>下一步：加文字</button>
-      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-2-back">上一步</button>
+      <button class="btn btn-primary" id="btn-2-next" disabled>下一步 · 加文字</button>
     </div>
   </div>
 
   <!-- Step 3: 加文字 -->
-  <div class="step-section" id="step-text" data-step="text">
+  <div class="step-section" id="step-3">
     <div class="card">
-      <h2>添加文字（可选）</h2>
+      <div class="card-title"><span class="icon">✏️</span> 添加文字（可选）</div>
       <div class="input-group">
         <label>输入文字（中英文混排）</label>
-        <input type="text" id="text-input" name="badge-text" placeholder="如：BadgeVerse 2026" maxlength="20">
+        <input type="text" id="text-input" placeholder="如：BadgeVerse 2026" maxlength="20">
       </div>
       <div class="select-row">
         <div class="input-group">
           <label>字体</label>
           <select id="font-select">
-            {% for f in fonts %}
-            <option value="{{ loop.index0 }}">{{ f.name }}</option>
-            {% endfor %}
+            {% for f in fonts %}<option value="{{ loop.index0 }}">{{ f.name }}</option>{% endfor %}
           </select>
         </div>
         <div class="input-group">
           <label>颜色</label>
           <select id="color-select">
-            {% for c in colors %}
-            <option value="{{ c.name }}">{{ c.name }}</option>
-            {% endfor %}
+            {% for c in colors %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
           </select>
         </div>
         <div class="input-group">
           <label>位置</label>
           <select id="position-select">
-            {% for p in positions %}
-            <option value="{{ p.name }}">{{ p.name }}</option>
-            {% endfor %}
+            {% for p in positions %}<option value="{{ p.name }}">{{ p.name }}</option>{% endfor %}
           </select>
         </div>
       </div>
-      <canvas id="canvas-preview" width="200" height="200" class="live-preview"></canvas>
-      <div class="btn-nav">
-        <button class="btn-secondary" id="btn-text-back">上一步</button>
-        <button class="btn-primary" id="btn-text-next">下一步：生成</button>
-      </div>
+      <canvas id="canvas-preview" width="160" height="160"></canvas>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-3-back">上一步</button>
+      <button class="btn btn-primary" id="btn-3-next">下一步 · 生成</button>
     </div>
   </div>
 
   <!-- Step 4: 生成 -->
-  <div class="step-section" id="step-generate" data-step="generate">
+  <div class="step-section" id="step-4">
     <div class="card">
-      <h2>生成你的吧唧</h2>
-      <div style="text-align:center;padding:8px 0 12px;color:var(--muted);font-size:14px" id="gen-summary">
-        风格：未选择 · 照片：未上传
+      <div class="card-title"><span class="icon">✨</span> 生成你的吧唧</div>
+      <div class="summary">
+        <div class="summary-chip"><div class="label">风格</div><div class="value" id="sum-style">-</div></div>
+        <div class="summary-chip"><div class="label">照片</div><div class="value" id="sum-photo">未上传</div></div>
+        <div class="summary-chip"><div class="label">文字</div><div class="value" id="sum-text">无</div></div>
       </div>
-      <button class="btn-primary" id="btn-generate">生成我的吧唧</button>
+      <button class="btn btn-primary" id="btn-generate">🚀 生成我的吧唧</button>
       <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div style="color:var(--muted);font-size:14px">AI 创作中...</div>
+        <div class="loading-text">AI 创作中...</div>
       </div>
-      <div class="result-preview" id="result-preview">
-        <img id="result-img" src="" alt="">
+      <div class="result-area" id="result-area">
+        <div class="result-circle"><img id="result-img" src="" alt=""></div>
+        <div class="pickup-box">
+          <div class="pickup-label">取件号</div>
+          <div class="pickup-code" id="pickup-code-text"></div>
+        </div>
+        <button class="btn btn-ghost" id="btn-redo" style="margin-top:12px">重新制作</button>
       </div>
-      <div class="pickup-display" id="pickup-code">
-        <div class="pickup-label">取件号</div>
-        <div class="pickup-code" id="pickup-code-text"></div>
-      </div>
-      <button class="btn-secondary" id="btn-redo" style="display:none;margin-top:12px">重新制作</button>
     </div>
   </div>
 </div>
 
 <script>
-let selectedStyle=null, fileId=null, uploadedImgUrl=null;
+let selectedStyle=null, selectedStyleName=null, fileId=null, uploadedImgUrl=null, selectedGender='all';
 const $=s=>document.querySelector(s);
-const canvas=$('#canvas-preview');
-const ctx=canvas.getContext('2d');
-
-const COLOR_MAP={'白色':'#fff','黑色':'#000','红色':'#ff4646','蓝色':'#3c82f6',
-  '绿色':'#22c55e','黄色':'#ffd700','粉色':'#ff69b4','紫色':'#9370db'};
+const canvas=$('#canvas-preview');const ctx=canvas.getContext('2d');
+const STYLES={% for name, cfg in styles.items() %}'{{ name }}':{gradient:'{{ cfg.gradient }}',emoji:'{{ cfg.emoji }}',gender:'{{ cfg.gender }}'},{% endfor %};
+const COLOR_MAP={'白色':'#fff','黑色':'#000','红色':'#ff4646','蓝色':'#3c82f6','绿色':'#22c55e','黄色':'#ffd700','粉色':'#ff69b4','紫色':'#9370db'};
 const FONT_MAP=['"Microsoft YaHei"','"SimHei"','"SimSun"','"KaiTi"','"DengXian"'];
 
-// 步骤切换
 function gotoStep(n){
   document.querySelectorAll('.step-section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.step-indicator').forEach((s,i)=>{
-    s.classList.remove('active','done');
-    if(i+1<n) s.classList.add('done');
-    else if(i+1===n) s.classList.add('active');
+  document.querySelectorAll('.step-dot').forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i+1<n)d.classList.add('done');
+    else if(i+1===n)d.classList.add('active');
   });
-  $('#step-'+['bg','person','text','generate'][n-1]).classList.add('active');
-  updateSummary();
+  document.querySelectorAll('.step-line').forEach((l,i)=>{if(i+1<n)l.classList.add('done');else l.classList.remove('done')});
+  $('#step-'+n).classList.add('active');
+  if(n===4)updateSummary();
 }
 
-function updateSummary(){
-  const s=$('#gen-summary');
-  if(s) s.textContent='风格：'+(selectedStyle||'未选择')+' · 照片：'+(fileId?'已上传':'未上传');
-}
-
-// Step 1: 风格选择
-document.querySelectorAll('.style-thumb').forEach(thumb=>{
-  thumb.addEventListener('click',()=>{
-    document.querySelectorAll('.style-thumb').forEach(t=>t.classList.remove('selected'));
-    thumb.classList.add('selected');
-    selectedStyle=thumb.dataset.style;
-    // 更新大图预览
-    const ph=thumb.querySelector('.placeholder');
-    $('#bg-preview').innerHTML='<div class="placeholder" style="background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">'+selectedStyle+'</div>';
-    $('#btn-bg-next').disabled=false;
+// Gender filter
+document.querySelectorAll('.gender-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedGender=btn.dataset.gender;
+    renderStyles();
   });
 });
-$('#btn-bg-next').addEventListener('click',()=>gotoStep(2));
 
-// Step 2: 上传
+function renderStyles(){
+  const grid=$('#style-grid');grid.innerHTML='';
+  Object.entries(STYLES).forEach(([name,cfg])=>{
+    if(selectedGender!=='all'&&cfg.gender!==selectedGender&&cfg.gender!=='neutral')return;
+    const card=document.createElement('div');
+    card.className='style-card'+(selectedStyleName===name?' selected':'');
+    card.dataset.style=name;
+    card.innerHTML=`<div class="style-bg" style="background:${cfg.gradient}">${cfg.emoji}</div><div class="style-label">${name}</div>`;
+    card.addEventListener('click',()=>{
+      document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedStyleName=name;selectedStyle=name;
+      $('#btn-1-next').disabled=false;
+    });
+    grid.appendChild(card);
+  });
+}
+renderStyles();
+
+$('#btn-1-next').addEventListener('click',()=>gotoStep(2));
+
+// Upload
 $('#file-input').addEventListener('change',async e=>{
-  const f=e.target.files[0]; if(!f) return;
+  const f=e.target.files[0];if(!f)return;
   const localUrl=URL.createObjectURL(f);
   uploadedImgUrl=localUrl;
-  $('#upload-placeholder').style.display='none';
-  $('#person-preview').style.display='block';
+  $('#upload-default').style.display='none';
+  $('#upload-done').style.display='block';
   $('#person-img').src=localUrl;
-  const fd=new FormData(); fd.append('file',f);
+  const fd=new FormData();fd.append('file',f);
   try{
     const r=await fetch('/api/upload',{method:'POST',body:fd});
     const d=await r.json();
     if(!d.ok){alert(d.error||'上传失败');return}
-    fileId=d.file_id;
-    uploadedImgUrl=d.preview_url;
+    fileId=d.file_id;uploadedImgUrl=d.preview_url;
     $('#person-img').src=d.preview_url;
-    $('#btn-person-next').disabled=false;
-  }catch(err){alert('网络错误，请重试')}
+    $('#btn-2-next').disabled=false;
+  }catch(err){alert('网络错误')}
 });
-$('#btn-person-back').addEventListener('click',()=>gotoStep(1));
-$('#btn-person-next').addEventListener('click',()=>{drawPreview();gotoStep(3)});
+$('#btn-2-back').addEventListener('click',()=>gotoStep(1));
+$('#btn-2-next').addEventListener('click',()=>{drawPreview();gotoStep(3)});
 
-// Step 3: 文字实时预览
+// Canvas preview
 function drawPreview(){
-  ctx.clearRect(0,0,200,200);
-  ctx.save();
-  ctx.beginPath();ctx.arc(100,100,98,0,Math.PI*2);ctx.closePath();ctx.clip();
+  ctx.clearRect(0,0,160,160);ctx.save();
+  ctx.beginPath();ctx.arc(80,80,78,0,Math.PI*2);ctx.closePath();ctx.clip();
   if(uploadedImgUrl){
     const img=new Image();img.crossOrigin='anonymous';
     img.onload=()=>{const s=Math.min(img.width,img.height);
       const sx=(img.width-s)/2,sy=(img.height-s)/2;
-      ctx.drawImage(img,sx,sy,s,s,0,0,200,200);drawText();};
+      ctx.drawImage(img,sx,sy,s,s,0,0,160,160);drawText();};
     img.src=uploadedImgUrl;
-  }else{ctx.fillStyle='#222244';ctx.fillRect(0,0,200,200);
-    ctx.fillStyle='#8888aa';ctx.font='12px sans-serif';ctx.textAlign='center';
-    ctx.fillText('预览区',100,105);}
+  }else{ctx.fillStyle='#1e1e3c';ctx.fillRect(0,0,160,160);
+    ctx.fillStyle='#666688';ctx.font='11px sans-serif';ctx.textAlign='center';ctx.fillText('预览区',80,84);}
   ctx.restore();
 }
 function drawText(){
   const text=$('#text-input').value.trim();if(!text)return;
   const color=COLOR_MAP[$('#color-select').value]||'#fff';
   const fontIdx=parseInt($('#font-select').value)||0;
-  const fontFamily=FONT_MAP[fontIdx]||'sans-serif';
-  let fontSize=22;ctx.font='bold '+fontSize+'px '+fontFamily;
-  let tw=ctx.measureText(text).width;
-  while(tw>160&&fontSize>10){fontSize-=2;ctx.font='bold '+fontSize+'px '+fontFamily;tw=ctx.measureText(text).width}
-  ctx.textAlign='center';ctx.fillStyle=color;ctx.strokeStyle='#000';ctx.lineWidth=2;
-  const pos=$('#position-select').value;
-  let y=pos==='顶部'?40:pos==='居中'?108:172;
-  ctx.strokeText(text,100,y);ctx.fillText(text,100,y);
+  const ff=FONT_MAP[fontIdx]||'sans-serif';
+  let fs=18;ctx.font='bold '+fs+'px '+ff;let tw=ctx.measureText(text).width;
+  while(tw>130&&fs>9){fs-=2;ctx.font='bold '+fs+'px '+ff;tw=ctx.measureText(text).width}
+  ctx.textAlign='center';ctx.fillStyle=color;ctx.strokeStyle='#000';ctx.lineWidth=1.5;
+  const pos=$('#position-select').value;let y=pos==='顶部'?30:pos==='居中'?86:140;
+  ctx.strokeText(text,80,y);ctx.fillText(text,80,y);
 }
 ['#text-input','#font-select','#color-select','#position-select'].forEach(sel=>{
   $(sel).addEventListener('input',drawPreview);$(sel).addEventListener('change',drawPreview);
 });
-$('#btn-text-back').addEventListener('click',()=>gotoStep(2));
-$('#btn-text-next').addEventListener('click',()=>gotoStep(4));
+$('#btn-3-back').addEventListener('click',()=>gotoStep(2));
+$('#btn-3-next').addEventListener('click',()=>gotoStep(4));
 
-// Step 4: 生成
+function updateSummary(){
+  $('#sum-style').textContent=selectedStyleName||'-';
+  $('#sum-photo').textContent=fileId?'已上传':'未上传';
+  $('#sum-text').textContent=$('#text-input').value.trim()||'无';
+}
+
+// Generate
 $('#btn-generate').addEventListener('click',async()=>{
   if(!fileId){alert('请先上传照片');gotoStep(2);return}
   if(!selectedStyle){alert('请先选择风格');gotoStep(1);return}
-  $('#btn-generate').style.display='none';
-  $('#loading').style.display='block';
+  $('#btn-generate').style.display='none';$('#loading').style.display='block';
   try{
-    const body={file_id:fileId,style:selectedStyle};
-    if($('#text-input').value) body.text=$('#text-input').value;
+    const body={file_id:fileId,style:selectedStyleName};
+    if($('#text-input').value)body.text=$('#text-input').value;
     body.font_index=parseInt($('#font-select').value)||0;
-    body.color_name=$('#color-select').value;
-    body.position_name=$('#position-select').value;
+    body.color_name=$('#color-select').value;body.position_name=$('#position-select').value;
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(!d.ok){alert(d.error||'生成失败');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
-    const taskId=d.task_id;let result=null;
+    const tid=d.task_id;let result=null;
     for(let i=0;i<60;i++){
       await new Promise(r=>setTimeout(r,2000));
-      const tr=await fetch('/api/task/'+taskId);const td=await tr.json();
+      const tr=await fetch('/api/task/'+tid);const td=await tr.json();
       if(td.status==='done'){result=td;break}
       if(td.status==='error'){alert('生成失败：'+(td.error||''));$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
     }
-    if(!result){alert('生成超时，请重试');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
-    $('#loading').style.display='none';
-    $('#result-preview').style.display='block';
+    if(!result){alert('生成超时');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
+    $('#loading').style.display='none';$('#result-area').style.display='block';
     $('#result-img').src=result.result_url+'?t='+Date.now();
     const or=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({style:selectedStyle,result_file:result.result_url,source_file:fileId,gen_ms:result.gen_ms})});
+      body:JSON.stringify({style:selectedStyleName,result_file:result.result_url,source_file:fileId,gen_ms:result.gen_ms})});
     const od=await or.json();
-    if(od.ok){$('#pickup-code').style.display='block';$('#pickup-code-text').textContent=od.pickup_code;$('#btn-redo').style.display='block'}
+    if(od.ok)$('#pickup-code-text').textContent=od.pickup_code;
   }catch(err){alert('生成失败，请重试');$('#btn-generate').style.display='block';$('#loading').style.display='none'}
 });
 $('#btn-redo').addEventListener('click',()=>location.reload());

@@ -138,7 +138,8 @@ def _mock_stylize(src_path, style_prompt):
 # ----------------------------- 对外入口 -----------------------------
 def stylize_image(src_path, style, file_id):
     """返回 (输出路径, 耗时秒, mock_used)。内部处理阶跃重试2次或 MOCK 生图。"""
-    style_prompt = config.STYLES.get(style, style)
+    style_config = config.STYLES.get(style, {"prompt": style, "gender": "neutral"})
+    style_prompt = style_config["prompt"] if isinstance(style_config, dict) else style_config
     t0 = time.time()
     out_path = os.path.join(config.GENERATED_DIR, f"{file_id}_styled.jpg")
 

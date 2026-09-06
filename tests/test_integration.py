@@ -38,7 +38,7 @@ def test_full_pipeline_mock():
 
     # 2. 提交生成任务（异步模式：返回 task_id）
     resp = c.post("/api/generate", json={
-        "file_id": file_id, "style": "动漫",
+        "file_id": file_id, "style": "油画质感",
         "text": "测试", "font_index": 0, "color_name": "白色", "position_name": "底部"
     })
     assert resp.status_code == 200
@@ -61,7 +61,7 @@ def test_full_pipeline_mock():
 
     # 3. 下单
     resp = c.post("/api/order", json={
-        "style": "动漫", "result_file": result_url, "source_file": file_id, "gen_ms": 1000
+        "style": "油画质感", "result_file": result_url, "source_file": file_id, "gen_ms": 1000
     })
     assert resp.status_code == 200
     data = resp.get_json()
@@ -90,7 +90,6 @@ def test_generate_rejected_bad_style():
     c = _setup_app()
     resp = c.post("/api/generate", json={"file_id": "nonexistent", "style": "不存在的风格"})
     assert resp.status_code == 400
-
 
 def test_health_returns_ok():
     """health 接口正常"""
