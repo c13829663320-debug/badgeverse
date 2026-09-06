@@ -362,6 +362,37 @@ def admin_stats():
     )
 
 
+@app.route("/api/admin/gallery")
+def admin_gallery():
+    """返回用户上传和生成的图片列表"""
+    import os as _os
+    uploads = []
+    generated = []
+    # 上传图片（排除 test_face.jpg）
+    if _os.path.isdir(config.UPLOAD_DIR):
+        for f in sorted(_os.listdir(config.UPLOAD_DIR), reverse=True):
+            if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")) and not f.startswith("test_") and not f.startswith("fallback_"):
+                stat = _os.stat(_os.path.join(config.UPLOAD_DIR, f))
+                uploads.append({
+                    "name": f,
+                    "url": f"/uploads/{f}",
+                    "size": stat.st_size,
+                    "time": int(stat.st_mtime),
+                })
+    # 生成图片
+    if _os.path.isdir(config.GENERATED_DIR):
+        for f in sorted(_os.listdir(config.GENERATED_DIR), reverse=True):
+            if f.lower().endswith((".jpg", ".jpeg", ".png")):
+                stat = _os.stat(_os.path.join(config.GENERATED_DIR, f))
+                generated.append({
+                    "name": f,
+                    "url": f"/generated/{f}",
+                    "size": stat.st_size,
+                    "time": int(stat.st_mtime),
+                })
+    return jsonify(uploads=uploads[:50], generated=generated[:50])
+
+
 if __name__ == "__main__":
     init_db()
     print(f"[BadgeVerse] MOCK={config.MOCK_MODE}  阶跃key={'已配置' if config.STEPFUN_API_KEY else '未配置'}")

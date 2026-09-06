@@ -36,6 +36,12 @@
   .error-entry .detail{color:#aaaacc;margin-top:2px}
   .empty{color:#666688;font-size:13px;text-align:center;padding:12px}
   #interval-value{color:#ec4899;font-weight:700}
+  .gallery-item{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:1;border:1px solid #333}
+  .gallery-item img{width:100%;height:100%;object-fit:cover}
+  .gallery-item .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#8888aa;font-size:10px;padding:2px 4px;text-align:center}
+  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;justify-content:center;align-items:center}
+  .modal img{max-width:90%;max-height:90%;border-radius:12px}
+  .modal .close{position:absolute;top:16px;right:24px;color:#fff;font-size:32px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -95,6 +101,20 @@
     <h2>错误日志</h2>
     <div id="error-log"><div class="empty">暂无错误</div></div>
   </div>
+
+  <div class="section">
+    <h2>用户上传图片</h2>
+    <div id="upload-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px"></div>
+  </div>
+
+  <div class="section">
+    <h2>AI生成图片</h2>
+    <div id="generated-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px"></div>
+  </div>
+  <div class="modal" id="img-modal" onclick="this.style.display='none'">
+    <span class="close">&times;</span>
+    <img src="" alt="">
+  </div>
 </div>
 
 <script>
@@ -150,7 +170,25 @@ $('#btn-reprint').addEventListener('click',async()=>{
   const d=await r.json();
   if(d.ok){alert('重打印已加入队列');loadStats()}else{alert('条目不存在')}
 });
-loadStats();loadOrders();loadErrors();
+loadStats();loadOrders();loadErrors();loadGallery();
+async function loadGallery(){
+  try{
+    const d=await fetch('/api/admin/gallery').then(r=>r.json());
+    const ug=$('#upload-gallery');
+    if(d.uploads&&d.uploads.length){
+      ug.innerHTML=d.uploads.map(i=>`<div class="gallery-item" onclick="showModal('${i.url}')"><img src="${i.url}" loading="lazy"><div class="overlay">${(i.size/1024).toFixed(0)}KB</div></div>`).join('');
+    }else{ug.innerHTML='<div class="empty">暂无上传</div>'}
+    const gg=$('#generated-gallery');
+    if(d.generated&&d.generated.length){
+      gg.innerHTML=d.generated.map(i=>`<div class="gallery-item" onclick="showModal('${i.url}')"><img src="${i.url}" loading="lazy"><div class="overlay">${(i.size/1024).toFixed(0)}KB</div></div>`).join('');
+    }else{gg.innerHTML='<div class="empty">暂无生成</div>'}
+  }catch(e){}
+}
+function showModal(url){
+  const m=$('#img-modal');
+  m.querySelector('img').src=url;
+  m.style.display='flex';
+}
 setInterval(()=>{loadStats();loadOrders();loadErrors()},10000);
 </script>
 </body>
