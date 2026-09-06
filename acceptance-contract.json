@@ -17,7 +17,7 @@
       "check_type": "test",
       "expect": "tests/test_text_overlay.py 全部通过：各字体/颜色/位置组合渲染正确，文字不超出圆形裁切区",
       "verifier": "python run_tests.py tests/test_text_overlay.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": []
     },
     {
