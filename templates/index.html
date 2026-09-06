@@ -162,7 +162,15 @@
         <div class="gender-btn" data-gender="female">女生</div>
         <div class="gender-btn" data-gender="male">男生</div>
       </div>
-      <div class="style-grid" id="style-grid"></div>
+      <div class="style-grid" id="style-grid">
+        {% for name, cfg in styles.items() %}
+        <div class="style-card" data-style="{{ name }}" data-gender="{{ cfg.gender }}"
+             style="background:{{ cfg.gradient }}">
+          <div class="style-bg">{{ cfg.emoji }}</div>
+          <div class="style-label">{{ name }}</div>
+        </div>
+        {% endfor %}
+      </div>
     </div>
     <button class="btn btn-primary" id="btn-1-next" disabled>下一步 · 上传照片</button>
   </div>
@@ -257,7 +265,6 @@
 let selectedStyle=null, selectedStyleName=null, fileId=null, uploadedImgUrl=null, selectedGender='all';
 const $=s=>document.querySelector(s);
 const canvas=$('#canvas-preview');const ctx=canvas.getContext('2d');
-const STYLES={% for name, cfg in styles.items() %}'{{ name }}':{gradient:'{{ cfg.gradient }}',emoji:'{{ cfg.emoji }}',gender:'{{ cfg.gender }}'},{% endfor %};
 const COLOR_MAP={'白色':'#fff','黑色':'#000','红色':'#ff4646','蓝色':'#3c82f6','绿色':'#22c55e','黄色':'#ffd700','粉色':'#ff69b4','紫色':'#9370db'};
 const FONT_MAP=['"Microsoft YaHei"','"SimHei"','"SimSun"','"KaiTi"','"DengXian"'];
 
@@ -279,28 +286,27 @@ document.querySelectorAll('.gender-btn').forEach(btn=>{
     document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     selectedGender=btn.dataset.gender;
-    renderStyles();
+    filterStyles();
   });
 });
 
-function renderStyles(){
-  const grid=$('#style-grid');grid.innerHTML='';
-  Object.entries(STYLES).forEach(([name,cfg])=>{
-    if(selectedGender!=='all'&&cfg.gender!==selectedGender&&cfg.gender!=='neutral')return;
-    const card=document.createElement('div');
-    card.className='style-card'+(selectedStyleName===name?' selected':'');
-    card.dataset.style=name;
-    card.innerHTML=`<div class="style-bg" style="background:${cfg.gradient}">${cfg.emoji}</div><div class="style-label">${name}</div>`;
-    card.addEventListener('click',()=>{
-      document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('selected'));
-      card.classList.add('selected');
-      selectedStyleName=name;selectedStyle=name;
-      $('#btn-1-next').disabled=false;
-    });
-    grid.appendChild(card);
+function filterStyles(){
+  document.querySelectorAll('.style-card').forEach(card=>{
+    const g=card.dataset.gender;
+    if(selectedGender!=='all'&&g!==selectedGender&&g!=='neutral')card.style.display='none';
+    else card.style.display='';
   });
 }
-renderStyles();
+
+// Style card selection
+document.querySelectorAll('.style-card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedStyleName=card.dataset.style;selectedStyle=card.dataset.style;
+    $('#btn-1-next').disabled=false;
+  });
+});
 
 $('#btn-1-next').addEventListener('click',()=>gotoStep(2));
 
