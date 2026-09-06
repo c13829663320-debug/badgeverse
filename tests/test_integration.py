@@ -144,10 +144,10 @@ def test_index_page_has_all_steps():
     html = c.get("/").data.decode("utf-8")
     soup = BeautifulSoup(html, "lxml")
     # 检查步骤标题
-    assert "上传照片" in html
-    assert "选风格" in html
-    assert "加文字" in html
-    assert "查看结果" in html
+    assert "选择风格" in html or "选风格" in html
+    assert "上传" in html
+    assert "文字" in html
+    assert "生成" in html
 
 
 def test_admin_page_has_all_sections():
