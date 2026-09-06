@@ -419,4 +419,10 @@ if __name__ == "__main__":
     init_db()
     print(f"[BadgeVerse] MOCK={config.MOCK_MODE}  阶跃key={'已配置' if config.STEPFUN_API_KEY else '未配置'}")
     print(f"[BadgeVerse] 启动 http://127.0.0.1:5000 （局域网 http://<本机IP>:5000）")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    try:
+        from waitress import serve
+        print("[BadgeVerse] 使用 waitress 生产级 WSGI 服务器")
+        serve(app, host="0.0.0.0", port=5000, threads=8)
+    except ImportError:
+        print("[BadgeVerse] waitress 未安装，回退到 Flask 开发服务器")
+        app.run(host="0.0.0.0", port=5000, debug=False)
