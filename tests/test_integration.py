@@ -24,7 +24,7 @@ def _setup_app():
 
 
 def test_full_pipeline_mock():
-    """完整链路：上传→生成→下单→取件号（MOCK 模式）"""
+    """完整链路：上传→生成→下单→取件号（MOCK 模式，异步轮询）"""
     c = _setup_app()
     # 1. 上传
     tmp = os.path.join(tempfile.gettempdir(), "test_integration.jpg")
@@ -36,7 +36,7 @@ def test_full_pipeline_mock():
     assert data["ok"] is True
     file_id = data["file_id"]
 
-    # 2. 生成
+    # 2. 提交生成任务（异步模式：返回 task_id）
     resp = c.post("/api/generate", json={
         "file_id": file_id, "style": "动漫",
         "text": "测试", "font_index": 0, "color_name": "白色", "position_name": "底部"
@@ -44,7 +44,20 @@ def test_full_pipeline_mock():
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["ok"] is True
-    result_url = data["result_url"]
+    task_id = data["task_id"]
+
+    # 3. 轮询任务状态（MOCK 模式应该很快完成）
+    import time
+    result_url = None
+    for _ in range(30):
+        resp = c.get(f"/api/task/{task_id}")
+        data = resp.get_json()
+        if data["status"] == "done":
+            result_url = data["result_url"]
+            break
+        time.sleep(0.5)
+
+    assert result_url is not None
 
     # 3. 下单
     resp = c.post("/api/order", json={

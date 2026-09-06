@@ -277,7 +277,7 @@ $('#file-input').addEventListener('change',async e=>{
   }
 });
 
-// 生成
+// 生成（异步轮询模式，避免长请求通过隧道超时）
 $('#btn-generate').addEventListener('click',async()=>{
   $('#btn-generate').style.display='none';
   $('#loading').style.display='block';
@@ -287,15 +287,28 @@ $('#btn-generate').addEventListener('click',async()=>{
     body.font_index=parseInt($('#font-select').value)||0;
     body.color_name=$('#color-select').value;
     body.position_name=$('#position-select').value;
+    // 1. 提交生成任务（立即返回 task_id）
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(!d.ok){alert(d.error||'生成失败');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
+    // 2. 轮询任务状态（每2秒查一次）
+    const taskId=d.task_id;
+    let result=null;
+    for(let i=0;i<60;i++){ // 最多等120秒
+      await new Promise(r=>setTimeout(r,2000));
+      const tr=await fetch('/api/task/'+taskId);
+      const td=await tr.json();
+      if(td.status==='done'){result=td;break}
+      if(td.status==='error'){alert('生成失败：'+(td.error||''));$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
+    }
+    if(!result){alert('生成超时，请重试');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
+    // 3. 显示结果
     $('#loading').style.display='none';
     $('#result-preview').style.display='block';
-    $('#result-img').src=d.result_url+'?t='+Date.now();
-    // 下单
+    $('#result-img').src=result.result_url+'?t='+Date.now();
+    // 4. 下单
     const or=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({style:selectedStyle,result_file:d.result_url,source_file:fileId,gen_ms:d.gen_ms})});
+      body:JSON.stringify({style:selectedStyle,result_file:result.result_url,source_file:fileId,gen_ms:result.gen_ms})});
     const od=await or.json();
     if(od.ok){
       $('#pickup-code').style.display='block';

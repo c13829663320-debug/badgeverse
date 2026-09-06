@@ -175,7 +175,38 @@ def favicon():
     return Response(svg, mimetype="image/svg+xml")
 
 
-# ----------------------------- 生成 + 文字叠加 -----------------------------
+# ----------------------------- 生成 + 文字叠加（异步模式）-----------------------------
+import threading as _threading_mod
+_task_store = {}  # task_id → {status, result_url, gen_ms, mock, error}
+
+def _do_generate_task(task_id, src, file_id, style, text, font_index, color_name, position_name):
+    """后台线程执行实际生成"""
+    t0 = time.time()
+    try:
+        out_path, gen_ms, mock_used = stylize_image(src, style, file_id)
+        result_path = os.path.join(config.GENERATED_DIR, f"{file_id}_result.jpg")
+        result_path = crop_to_circle(out_path, result_path)
+
+        if text:
+            from PIL import Image
+            img = Image.open(result_path)
+            img = add_text_to_image(img, text, font_index, color_name, position_name)
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGB")
+            img.save(result_path, "JPEG", quality=95)
+
+        _task_store[task_id] = {
+            "status": "done",
+            "result_url": f"/generated/{os.path.basename(result_path)}",
+            "gen_ms": int(gen_ms * 1000),
+            "mock": mock_used,
+        }
+    except Exception as e:
+        if failure_logger:
+            failure_logger.log_error(file_id, "generation_failed", str(e))
+        _task_store[task_id] = {"status": "error", "error": str(e)}
+
+
 @app.route("/api/generate", methods=["POST"])
 def generate():
     init_db()
@@ -190,7 +221,6 @@ def generate():
     if style not in config.STYLES:
         return jsonify(ok=False, error="不支持的风格"), 400
 
-    # 按扩展名查找上传文件（记录完整路径避免遍历目录）
     src = None
     for ext in (".jpg", ".jpeg", ".png", ".webp"):
         candidate = os.path.join(config.UPLOAD_DIR, f"{file_id}{ext}")
@@ -200,33 +230,25 @@ def generate():
     if not src:
         return jsonify(ok=False, error="未找到上传的图片"), 404
 
-    t0 = time.time()
-    try:
-        out_path, gen_ms, mock_used = stylize_image(src, style, file_id)
-    except Exception as e:
-        if failure_logger:
-            failure_logger.log_error(file_id, "generation_failed", str(e))
-        return jsonify(ok=False, error=f"生成失败：{e}"), 500
+    # 异步生成：立即返回 task_id，后台线程处理
+    task_id = uuid.uuid4().hex[:12]
+    _task_store[task_id] = {"status": "pending"}
+    t = _threading_mod.Thread(target=_do_generate_task,
+                             args=(task_id, src, file_id, style, text,
+                                   font_index, color_name, position_name),
+                             daemon=True)
+    t.start()
 
-    result_path = os.path.join(config.GENERATED_DIR, f"{file_id}_result.jpg")
-    result_path = crop_to_circle(out_path, result_path)
+    return jsonify(ok=True, task_id=task_id)
 
-    # 文字叠加
-    if text:
-        from PIL import Image
-        img = Image.open(result_path)
-        img = add_text_to_image(img, text, font_index, color_name, position_name)
-        # RGBA → RGB（JPEG 不支持透明通道）
-        if img.mode in ("RGBA", "LA", "P"):
-            img = img.convert("RGB")
-        img.save(result_path, "JPEG", quality=95)
 
-    return jsonify(
-        ok=True,
-        result_url=f"/generated/{os.path.basename(result_path)}",
-        gen_ms=int(gen_ms * 1000),
-        mock=mock_used,
-    )
+@app.route("/api/task/<task_id>")
+def task_status(task_id):
+    """轮询生成任务状态"""
+    task = _task_store.get(task_id)
+    if not task:
+        return jsonify(ok=False, error="任务不存在"), 404
+    return jsonify(ok=True, **task)
 
 
 @app.route("/generated/<name>")
