@@ -132,7 +132,7 @@
   </div>
 
   <div class="card">
-    <button class="btn-primary" id="btn-generate" disabled>生成我的吧唧</button>
+    <button class="btn-primary" id="btn-generate">生成我的吧唧</button>
     <div class="loading" id="loading">
       <div class="spinner"></div>
       <div style="color:var(--muted);font-size:14px">AI 创作中...</div>
@@ -279,6 +279,8 @@ $('#file-input').addEventListener('change',async e=>{
 
 // 生成（异步轮询模式，避免长请求通过隧道超时）
 $('#btn-generate').addEventListener('click',async()=>{
+  if(!fileId){alert('请先上传照片');return}
+  if(!selectedStyle){alert('请先选择风格');return}
   $('#btn-generate').style.display='none';
   $('#loading').style.display='block';
   try{
