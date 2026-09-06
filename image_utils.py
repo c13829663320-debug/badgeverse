@@ -31,6 +31,19 @@ def _guess_mime(path):
     return {".png": "image/png", ".webp": "image/webp"}.get(ext, "image/jpeg")
 
 
+def _preprocess_image(src_path):
+    """预处理：确保图片不超过阶跃 API 限制（4096x4096），返回临时文件路径。"""
+    img = Image.open(src_path).convert("RGB")
+    w, h = img.size
+    if max(w, h) > 4000:
+        ratio = 4000 / max(w, h)
+        img = img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+        tmp = src_path.rsplit(".", 1)[0] + "_pre.jpg"
+        img.save(tmp, "JPEG", quality=92)
+        return tmp
+    return src_path
+
+
 def _call_stepfun(src_path, style_prompt):
     """调用阶跃 StepFun 图像编辑 API（图生图风格化），返回 PIL Image。"""
     headers = {
@@ -38,7 +51,9 @@ def _call_stepfun(src_path, style_prompt):
     }
     url = f"{config.STEPFUN_BASE_URL}/images/edits"
     prompt = EDIT_PROMPT_PREFIX + style_prompt + EDIT_PROMPT_SUFFIX
-    with open(src_path, "rb") as f:
+    # 预处理：确保图片不超 4096px
+    actual_src = _preprocess_image(src_path)
+    with open(actual_src, "rb") as f:
         files = {"image": (os.path.basename(src_path), f, _guess_mime(src_path))}
         form = {
             "model": config.STEPFUN_IMAGE_MODEL,

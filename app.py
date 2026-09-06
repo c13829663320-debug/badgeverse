@@ -134,7 +134,13 @@ def upload():
             pass
         return jsonify(ok=False, error=f"图片未通过内容审核: {mod_result.get('detail','')}"), 403
 
-    return jsonify(ok=True, file_id=fid, file_path=path)
+    return jsonify(ok=True, file_id=fid, file_path=path,
+                   preview_url=f"/uploads/{fid}{ext}")
+
+
+@app.route("/uploads/<name>")
+def uploaded_file(name):
+    return send_from_directory(config.UPLOAD_DIR, name)
 
 
 # ----------------------------- 生成 + 文字叠加 -----------------------------

@@ -23,11 +23,14 @@
     box-shadow:0 4px 20px rgba(0,0,0,0.3)}
   .card h2{font-size:16px;margin-bottom:12px;color:var(--accent2)}
   .upload-area{border:2px dashed #444466;border-radius:var(--radius);padding:32px;
-    text-align:center;cursor:pointer;transition:border-color .3s}
+    text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
   .upload-area:hover{border-color:var(--accent)}
   .upload-area input[type=file]{display:none}
   .upload-icon{font-size:40px;color:var(--accent);margin-bottom:8px}
   .upload-text{color:var(--muted);font-size:14px}
+  .upload-thumb{width:100%;max-width:200px;height:200px;border-radius:50%;object-fit:cover;
+    margin:0 auto;display:block;border:3px solid var(--accent)}
+  .upload-done{display:none}
   .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .style-btn{background:#222244;border:2px solid transparent;border-radius:14px;
     padding:14px;text-align:center;cursor:pointer;transition:all .3s;font-size:15px}
@@ -50,8 +53,8 @@
   .pickup-display{text-align:center;padding:20px;display:none}
   .pickup-code{font-size:24px;font-weight:800;color:var(--accent2);letter-spacing:2px}
   .pickup-label{color:var(--muted);font-size:13px;margin-top:4px}
-  #canvas-preview{width:200px;height:200px;border-radius:50%;margin:12px auto;
-    border:2px solid #333355;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #canvas-preview{display:block;width:200px;height:200px;margin:12px auto;
+    border-radius:50%;border:2px solid #333355;background:#222244}
   .loading{display:none;text-align:center;padding:20px}
   .spinner{width:40px;height:40px;border:3px solid #333355;border-top-color:var(--accent2);
     border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px}
@@ -71,8 +74,11 @@
   <div class="card">
     <h2><span class="step-num">1</span>上传照片</h2>
     <label class="upload-area" id="upload-area">
-      <div class="upload-icon">📷</div>
-      <div class="upload-text">点击拍照或选择图片</div>
+      <div id="upload-placeholder">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">点击拍照或选择图片</div>
+      </div>
+      <img class="upload-thumb upload-done" id="upload-thumb" src="" alt="">
       <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" capture="user">
     </label>
   </div>
@@ -118,9 +124,7 @@
         </select>
       </div>
     </div>
-    <div id="canvas-preview" class="live-preview">
-      <span style="color:var(--muted);font-size:12px">预览区</span>
-    </div>
+    <canvas id="canvas-preview" width="200" height="200" class="live-preview"></canvas>
   </div>
 
   <div class="card">
@@ -144,8 +148,19 @@
 </div>
 
 <script>
-let fileId=null, selectedStyle=null;
+let fileId=null, selectedStyle=null, uploadedImgUrl=null;
 const $=s=>document.querySelector(s);
+const canvas=$('#canvas-preview');
+const ctx=canvas.getContext('2d');
+
+// 颜色映射
+const COLOR_MAP={
+  '白色':'#ffffff','黑色':'#000000','红色':'#ff4646','蓝色':'#3c82f6',
+  '绿色':'#22c55e','黄色':'#ffd700','粉色':'#ff69b4','紫色':'#9370db'
+};
+// 字体映射
+const FONT_MAP=['','sans-serif','serif','monospace','sans-serif'];
+
 // 风格选择
 document.querySelectorAll('.style-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -153,20 +168,110 @@ document.querySelectorAll('.style-btn').forEach(btn=>{
     btn.classList.add('active');
     selectedStyle=btn.dataset.style;
     $('#btn-generate').disabled=!fileId||!selectedStyle;
+    drawPreview();
   });
 });
+
+// 实时预览绘制
+function drawPreview(){
+  ctx.clearRect(0,0,200,200);
+  // 画背景圆
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(100,100,98,0,Math.PI*2);
+  ctx.closePath();
+  ctx.clip();
+  // 画上传的图（如果有）
+  if(uploadedImgUrl){
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{
+      const s=Math.min(img.width,img.height);
+      const sx=(img.width-s)/2, sy=(img.height-s)/2;
+      ctx.drawImage(img,sx,sy,s,s,0,0,200,200);
+      drawText();
+    };
+    img.src=uploadedImgUrl;
+  } else {
+    ctx.fillStyle='#222244';
+    ctx.fillRect(0,0,200,200);
+    ctx.fillStyle='#8888aa';
+    ctx.font='12px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('预览区',100,105);
+  }
+  ctx.restore();
+}
+
+function drawText(){
+  const text=$('#text-input').value.trim();
+  if(!text) return;
+  const colorName=$('#color-select').value;
+  const posName=$('#position-select').value;
+  const color=COLOR_MAP[colorName]||'#ffffff';
+  const fontIdx=parseInt($('#font-select').value)||0;
+  const fontFamily=FONT_MAP[fontIdx]||'sans-serif';
+
+  let fontSize=22;
+  ctx.font=`bold ${fontSize}px ${fontFamily}`;
+  let tw=ctx.measureText(text).width;
+  while(tw>160 && fontSize>10){fontSize-=2;ctx.font=`bold ${fontSize}px ${fontFamily}`;tw=ctx.measureText(text).width}
+
+  ctx.textAlign='center';
+  ctx.fillStyle=color;
+  ctx.strokeStyle='#000000';
+  ctx.lineWidth=2;
+
+  let y;
+  if(posName==='顶部') y=40;
+  else if(posName==='居中') y=108;
+  else y=172; // 底部
+
+  ctx.strokeText(text,100,y);
+  ctx.fillText(text,100,y);
+}
+
+// 文字/字体/颜色/位置变化 → 重绘
+['#text-input','#font-select','#color-select','#position-select'].forEach(sel=>{
+  $(sel).addEventListener('input',drawPreview);
+  $(sel).addEventListener('change',drawPreview);
+});
+
 // 上传
 $('#file-input').addEventListener('change',async e=>{
   const f=e.target.files[0]; if(!f) return;
+  // 先显示本地缩略图
+  const localUrl=URL.createObjectURL(f);
+  uploadedImgUrl=localUrl;
+  $('#upload-placeholder').style.display='none';
+  $('#upload-thumb').src=localUrl;
+  $('#upload-thumb').style.display='block';
+  drawPreview();
+
   const fd=new FormData(); fd.append('file',f);
   try{
     const r=await fetch('/api/upload',{method:'POST',body:fd});
     const d=await r.json();
-    if(!d.ok){alert(d.error||'上传失败');return}
+    if(!d.ok){
+      alert(d.error||'上传失败');
+      $('#upload-placeholder').style.display='block';
+      $('#upload-thumb').style.display='none';
+      uploadedImgUrl=null;
+      return;
+    }
     fileId=d.file_id;
+    uploadedImgUrl=d.preview_url;
+    $('#upload-thumb').src=d.preview_url;
+    drawPreview();
     $('#btn-generate').disabled=!selectedStyle;
-  }catch(err){alert('网络错误')}
+  }catch(err){
+    alert('网络错误，请重试');
+    $('#upload-placeholder').style.display='block';
+    $('#upload-thumb').style.display='none';
+    uploadedImgUrl=null;
+  }
 });
+
 // 生成
 $('#btn-generate').addEventListener('click',async()=>{
   $('#btn-generate').style.display='none';
@@ -174,9 +279,9 @@ $('#btn-generate').addEventListener('click',async()=>{
   try{
     const body={file_id:fileId,style:selectedStyle};
     if($('#text-input').value) body.text=$('#text-input').value;
-    if($('#font-select').value) body.font_index=$('#font-select').value;
-    if($('#color-select').value) body.color_name=$('#color-select').value;
-    if($('#position-select').value) body.position_name=$('#position-select').value;
+    body.font_index=parseInt($('#font-select').value)||0;
+    body.color_name=$('#color-select').value;
+    body.position_name=$('#position-select').value;
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(!d.ok){alert(d.error||'生成失败');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
@@ -193,20 +298,9 @@ $('#btn-generate').addEventListener('click',async()=>{
     }
   }catch(err){alert('生成失败，请重试');$('#btn-generate').style.display='block';$('#loading').style.display='none'}
 });
-// 加载字体/颜色/位置选项
-async function loadOptions(){
-  try{
-    const[fr,cr,pr]=await Promise.all([
-      fetch('/api/fonts').then(r=>r.json()),
-      fetch('/api/colors').then(r=>r.json()),
-      fetch('/api/positions').then(r=>r.json())
-    ]);
-    if(fr.ok) fr.fonts.forEach((f,i)=>{const o=document.createElement('option');o.value=i;o.textContent=f.name;$('#font-select').appendChild(o)});
-    if(cr.ok) cr.colors.forEach(c=>{const o=document.createElement('option');o.value=c.name;o.textContent=c.name;$('#color-select').appendChild(o)});
-    if(pr.ok) pr.positions.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;$('#position-select').appendChild(o)});
-  }catch(e){}
-}
-loadOptions();
+
+// 初始绘制
+drawPreview();
 </script>
 </body>
 </html>
