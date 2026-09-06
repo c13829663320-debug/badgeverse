@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Runtime data (用户上传、生成图、打印输出、订单数据库)
+uploads/*
+!uploads/test_face.jpg
+generated/*
+output/*
+data/*.sqlite3
+
+# Logs
+*.log
+*.out
+*.err
+
+# Environment / secrets
+.env
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

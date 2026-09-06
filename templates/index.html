@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>吧唧星球 · BadgeVerse</title>
+<style>
+  :root{
+    --bg:#0f1220; --card:#191d33; --accent:#ff6f9c; --accent2:#7c5cff;
+    --text:#f4f5ff; --muted:#9aa0c0; --ok:#3ddc97; --err:#ff6b6b;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  body{background:linear-gradient(160deg,#0f1220,#1a1030 60%,#241040); color:var(--text); min-height:100vh; padding:18px 16px 40px;}
+  .wrap{max-width:480px; margin:0 auto;}
+  h1{font-size:22px; font-weight:800; letter-spacing:.5px;}
+  .sub{color:var(--muted); font-size:13px; margin-top:4px;}
+  .step{display:flex; gap:10px; align-items:center; margin:16px 0 8px;}
+  .step .num{width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+  .step .t{font-weight:700;font-size:15px;}
+  .card{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px; margin-bottom:14px;}
+  .upload{border:2px dashed rgba(255,255,255,.2); border-radius:14px; padding:26px; text-align:center; cursor:pointer; color:var(--muted); font-size:14px; transition:.2s;}
+  .upload.active{border-color:var(--accent); background:rgba(255,111,156,.08);}
+  .upload img{max-width:100%; border-radius:12px; display:none; margin-bottom:8px;}
+  .styles{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
+  .style{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:14px 10px; border-radius:12px; text-align:center; cursor:pointer; font-size:14px; transition:.15s;}
+  .style.sel{background:var(--accent2); border-color:var(--accent2); color:#fff; font-weight:700;}
+  .btn{width:100%; padding:15px; border:none; border-radius:14px; font-size:16px; font-weight:700; color:#fff; margin-top:12px; cursor:pointer; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:.2s;}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+  .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,.2);}
+  .preview{display:none; text-align:center;}
+  .preview img{max-width:100%; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.4);}
+  .badge{display:none; text-align:center; padding:18px;}
+  .badge .code{font-size:30px; font-weight:800; letter-spacing:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:8px 0;}
+  .status{margin-top:10px; font-size:13px; color:var(--muted);}
+  .status.err{color:var(--err);}
+  .loading{display:none; text-align:center; color:var(--muted); margin-top:12px;}
+  .spinner{width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--accent);border-radius:50%;display:inline-block;vertical-align:middle;animation:spin .8s linear infinite;margin-right:8px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .foot{text-align:center; color:var(--muted); font-size:11px; margin-top:30px; line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>吧唧星球 · BadgeVerse</h1>
+  <div class="sub">60 秒，把此刻的自己，变成一枚能别在胸口的记忆。</div>
+
+  <!-- Step1 上传 -->
+  <div class="step"><div class="num">1</div><div class="t">上传一张照片</div></div>
+  <div class="card">
+    <div class="upload" id="uploadBox">
+      <div id="uploadHint">点击选择或拍摄照片（正脸，≤10MB）</div>
+      <img id="uploadPreview" alt="">
+    </div>
+    <input type="file" id="fileInput" accept="image/*" hidden>
+  </div>
+
+  <!-- Step2 选风格 -->
+  <div class="step"><div class="num">2</div><div class="t">选择风格</div></div>
+  <div class="card">
+    <div class="styles" id="styles"></div>
+  </div>
+
+  <!-- Step3 生成 -->
+  <button class="btn" id="genBtn" disabled>✨ 生成我的吧唧</button>
+  <div class="loading" id="loading"><span class="spinner"></span>正在生成，约 15 秒…</div>
+  <div class="status" id="status"></div>
+
+  <!-- 预览 -->
+  <div class="preview card" id="previewBox">
+    <p style="text-align:left;font-weight:700;margin-bottom:10px;">预览 · 确认</p>
+    <img id="previewImg" alt="">
+    <div id="mockHint" class="status"></div>
+    <button class="btn" id="orderBtn">提交订单 · 免费体验</button>
+  </div>
+
+  <!-- 取件号 -->
+  <div class="badge card" id="badgeBox">
+    <p style="color:var(--muted);font-size:13px;">取件号（现场凭此取件）</p>
+    <div class="code" id="pickupCode">--</div>
+    <p style="color:var(--muted);font-size:12px;">请截图保存取件号，现场叫号交付</p>
+    <button class="btn ghost" id="againBtn">再来一枚</button>
+  </div>
+
+  <div class="foot">免费体验 · 现场打印 · 覆膜圆裁压制交付<br>吧唧星球 BadgeVerse · 参赛 MVP</div>
+</div>
+
+<script>
+const styles = {{ styles_json | safe }};
+let fileId=null, resultFile=null, sourceFile=null, genMs=0, currentStyle="动漫", selStyle="动漫";
+
+// build style buttons
+const stylesEl = document.getElementById("styles");
+Object.keys(styles).forEach(name=>{
+  const div=document.createElement("div"); div.className="style"; div.textContent=name;
+  if(name===selStyle) div.classList.add("sel");
+  div.onclick=()=>{ document.querySelectorAll(".style").forEach(s=>s.classList.remove("sel")); div.classList.add("sel"); selStyle=name; currentStyle=name; };
+  stylesEl.appendChild(div);
+});
+
+// upload
+const box=document.getElementById("uploadBox"), input=document.getElementById("fileInput");
+box.onclick=()=>input.click();
+input.onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fd=new FormData(); fd.append("file",f);
+  setStatus("上传中…");
+  const r=await fetch("/api/upload",{method:"POST",body:fd});
+  const j=await r.json();
+  if(!j.ok){ setStatus(j.error||"上传失败",true); return; }
+  fileId=j.file_id; sourceFile=j.file_path;
+  document.getElementById("uploadPreview").src=URL.createObjectURL(f);
+  document.getElementById("uploadPreview").style.display="block";
+  document.getElementById("uploadHint").textContent=f.name;
+  box.classList.add("active");
+  document.getElementById("genBtn").disabled=false;
+  setStatus("照片已就绪 ✓");
+};
+
+// generate
+document.getElementById("genBtn").onclick=async()=>{
+  if(!fileId) return;
+  document.getElementById("genBtn").disabled=true;
+  document.getElementById("loading").style.display="block";
+  setStatus("AI 风格化生成中，请稍候…");
+  const r=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({file_id:fileId,style:currentStyle})});
+  const j=await r.json();
+  document.getElementById("loading").style.display="none";
+  document.getElementById("genBtn").disabled=false;
+  if(!j.ok){ setStatus(j.error||"生成失败",true); return; }
+  resultFile=j.result_url; genMs=j.gen_ms;
+  document.getElementById("previewImg").src=j.result_url;
+  document.getElementById("previewBox").style.display="block";
+  document.getElementById("mockHint").textContent=j.mock?"（当前为演示模式生成，接阶跃API后为真实风格化）":"";
+  setStatus("生成成功，耗时 "+(j.gen_ms/1000).toFixed(1)+" 秒 ✓");
+  document.getElementById("badgeBox").style.display="none";
+};
+
+// order
+document.getElementById("orderBtn").onclick=async()=>{
+  const r=await fetch("/api/order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({style:currentStyle,result_file:resultFile,source_file:sourceFile,gen_ms:genMs})});
+  const j=await r.json();
+  if(!j.ok){ setStatus(j.error||"下单失败",true); return; }
+  document.getElementById("pickupCode").textContent=j.pickup_code;
+  document.getElementById("previewBox").style.display="none";
+  document.getElementById("badgeBox").style.display="block";
+  setStatus("下单成功 ✓");
+};
+
+// again
+document.getElementById("againBtn").onclick=()=>{ location.reload(); };
+
+function setStatus(msg,err){ const s=document.getElementById("status"); s.textContent=msg; s.className="status"+(err?" err":""); }
+</script>
+</body>
+</html>
