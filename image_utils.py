@@ -44,6 +44,16 @@ def _preprocess_image(src_path):
     return src_path
 
 
+def _cleanup_preprocessed(src_path):
+    """清理预处理产生的临时文件"""
+    pre = src_path.rsplit(".", 1)[0] + "_pre.jpg"
+    if pre != src_path and os.path.exists(pre):
+        try:
+            os.remove(pre)
+        except OSError:
+            pass
+
+
 def _call_stepfun(src_path, style_prompt):
     """调用阶跃 StepFun 图像编辑 API（图生图风格化），返回 PIL Image。"""
     headers = {
@@ -53,15 +63,18 @@ def _call_stepfun(src_path, style_prompt):
     prompt = EDIT_PROMPT_PREFIX + style_prompt + EDIT_PROMPT_SUFFIX
     # 预处理：确保图片不超 4096px
     actual_src = _preprocess_image(src_path)
-    with open(actual_src, "rb") as f:
-        files = {"image": (os.path.basename(src_path), f, _guess_mime(src_path))}
-        form = {
-            "model": config.STEPFUN_IMAGE_MODEL,
-            "prompt": prompt,
-            "response_format": "b64_json",
-        }
-        resp = requests.post(url, headers=headers, files=files, data=form,
-                             timeout=config.GENERATE_TIMEOUT)
+    try:
+        with open(actual_src, "rb") as f:
+            files = {"image": (os.path.basename(src_path), f, _guess_mime(src_path))}
+            form = {
+                "model": config.STEPFUN_IMAGE_MODEL,
+                "prompt": prompt,
+                "response_format": "b64_json",
+            }
+            resp = requests.post(url, headers=headers, files=files, data=form,
+                                 timeout=config.GENERATE_TIMEOUT)
+    finally:
+        _cleanup_preprocessed(src_path)
     if resp.status_code != 200:
         raise RuntimeError(f"阶跃接口 HTTP {resp.status_code}: {resp.text[:300]}")
     data = resp.json()

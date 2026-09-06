@@ -53,7 +53,7 @@ def _do_print(file_path, printer_name=None):
         cmd = ["rundll32", "C:\\WINDOWS\\System32\\shimgvw.dll,ImageView_PrintFull",
                file_path]
 
-    result = subprocess.run(cmd, capture_output=True, timeout=60)
+    result = subprocess.run(cmd, capture_output=True, timeout=30)
     if result.returncode != 0:
         raise RuntimeError(f"打印命令失败 (code={result.returncode}): {result.stderr[:200]}")
 

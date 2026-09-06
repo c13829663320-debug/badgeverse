@@ -55,6 +55,10 @@
   .pickup-label{color:var(--muted);font-size:13px;margin-top:4px}
   #canvas-preview{display:block;width:200px;height:200px;margin:12px auto;
     border-radius:50%;border:2px solid #333355;background:#222244}
+  .btn-secondary{width:100%;background:#222244;border:1px solid #444466;
+    border-radius:14px;padding:14px;color:var(--text);font-size:15px;
+    cursor:pointer;transition:all .3s}
+  .btn-secondary:active{transform:scale(0.97)}
   .loading{display:none;text-align:center;padding:20px}
   .spinner{width:40px;height:40px;border:3px solid #333355;border-top-color:var(--accent2);
     border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px}
@@ -79,7 +83,7 @@
         <div class="upload-text">点击拍照或选择图片</div>
       </div>
       <img class="upload-thumb upload-done" id="upload-thumb" src="" alt="">
-      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" capture="user">
+      <input type="file" id="file-input" accept="image/*">
     </label>
   </div>
 
@@ -144,6 +148,7 @@
       <div class="pickup-label">取件号</div>
       <div class="pickup-code" id="pickup-code-text"></div>
     </div>
+    <button class="btn-secondary" id="btn-redo" style="display:none;margin-top:12px">重新制作</button>
   </div>
 </div>
 
@@ -295,8 +300,14 @@ $('#btn-generate').addEventListener('click',async()=>{
     if(od.ok){
       $('#pickup-code').style.display='block';
       $('#pickup-code-text').textContent=od.pickup_code;
+      $('#btn-redo').style.display='block';
     }
   }catch(err){alert('生成失败，请重试');$('#btn-generate').style.display='block';$('#loading').style.display='none'}
+});
+
+// 重新制作
+$('#btn-redo').addEventListener('click',()=>{
+  location.reload();
 });
 
 // 初始绘制

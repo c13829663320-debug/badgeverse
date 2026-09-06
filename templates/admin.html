@@ -151,7 +151,7 @@ $('#btn-reprint').addEventListener('click',async()=>{
   if(d.ok){alert('重打印已加入队列');loadStats()}else{alert('条目不存在')}
 });
 loadStats();loadOrders();loadErrors();
-setInterval(()=>{loadStats();loadOrders();loadErrors()},5000);
+setInterval(()=>{loadStats();loadOrders();loadErrors()},10000);
 </script>
 </body>
 </html>

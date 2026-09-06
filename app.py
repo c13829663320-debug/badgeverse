@@ -26,14 +26,19 @@ from modules.offline_fallback import OfflineFallback, get_fallback_images
 from modules.failure_logger import FailureLogger
 from modules.order_manager import OrderManager
 
+import threading
+
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12MB
 
 # ----------------------------- 全局单例 -----------------------------
-print_queue = PrintQueue(interval_seconds=config.PRINT_INTERVAL, mock=True)
+print_queue = PrintQueue(interval_seconds=config.PRINT_INTERVAL,
+                          mock=config.MOCK_MODE)
 offline_fallback = OfflineFallback()
 failure_logger = None  # 延迟初始化
 order_manager = None  # 延迟初始化
+_queue_thread = None
+_queue_running = False
 
 
 # ----------------------------- 工具 -----------------------------
@@ -49,27 +54,43 @@ def get_db():
 
 
 def init_db():
-    global failure_logger, order_manager
-    ensure_dirs()
-    conn = get_db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pickup_code TEXT UNIQUE,
-            style TEXT,
-            created_at TEXT,
-            gen_ms INTEGER,
-            status TEXT,
-            source_file TEXT,
-            result_file TEXT,
-            print_file TEXT,
-            error TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
-    failure_logger = FailureLogger(config.DB_PATH)
-    order_manager = OrderManager(config.DB_PATH)
+    global failure_logger, order_manager, _queue_thread, _queue_running
+    if failure_logger is None:
+        ensure_dirs()
+        conn = get_db()
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pickup_code TEXT UNIQUE,
+                style TEXT,
+                created_at TEXT,
+                gen_ms INTEGER,
+                status TEXT,
+                source_file TEXT,
+                result_file TEXT,
+                print_file TEXT,
+                error TEXT
+            )
+        """)
+        conn.commit()
+        conn.close()
+        failure_logger = FailureLogger(config.DB_PATH)
+        order_manager = OrderManager(config.DB_PATH)
+    # 启动打印队列后台处理线程（只启动一次）
+    if not _queue_running:
+        _queue_running = True
+        _queue_thread = threading.Thread(target=_queue_worker, daemon=True)
+        _queue_thread.start()
+
+
+def _queue_worker():
+    """后台线程：自动处理打印队列（每2秒检查一次）"""
+    while _queue_running:
+        try:
+            print_queue.process_next()
+        except Exception:
+            pass
+        time.sleep(2)
 
 
 def make_pickup_code():
@@ -101,11 +122,13 @@ def index():
 
 @app.route("/admin")
 def admin():
+    init_db()
     return render_template("admin.html")
 
 
 @app.route("/health")
 def health():
+    init_db()
     return jsonify(ok=True, mock=config.MOCK_MODE,
                    offline=offline_fallback.is_offline())
 
@@ -113,6 +136,7 @@ def health():
 # ----------------------------- 上传 + 内容审核 -----------------------------
 @app.route("/api/upload", methods=["POST"])
 def upload():
+    init_db()
     if "file" not in request.files:
         return jsonify(ok=False, error="未收到文件"), 400
     f = request.files["file"]
@@ -143,9 +167,18 @@ def uploaded_file(name):
     return send_from_directory(config.UPLOAD_DIR, name)
 
 
+@app.route("/favicon.ico")
+def favicon():
+    """内联 SVG favicon，避免 404"""
+    from flask import Response
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#7c3aed"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-family="sans-serif" font-weight="bold">B</text></svg>'
+    return Response(svg, mimetype="image/svg+xml")
+
+
 # ----------------------------- 生成 + 文字叠加 -----------------------------
 @app.route("/api/generate", methods=["POST"])
 def generate():
+    init_db()
     data = request.get_json(silent=True) or {}
     file_id = data.get("file_id")
     style = data.get("style", "动漫")
@@ -157,10 +190,12 @@ def generate():
     if style not in config.STYLES:
         return jsonify(ok=False, error="不支持的风格"), 400
 
+    # 按扩展名查找上传文件（记录完整路径避免遍历目录）
     src = None
-    for name in os.listdir(config.UPLOAD_DIR):
-        if name.startswith(file_id):
-            src = os.path.join(config.UPLOAD_DIR, name)
+    for ext in (".jpg", ".jpeg", ".png", ".webp"):
+        candidate = os.path.join(config.UPLOAD_DIR, f"{file_id}{ext}")
+        if os.path.exists(candidate):
+            src = candidate
             break
     if not src:
         return jsonify(ok=False, error="未找到上传的图片"), 404
@@ -218,6 +253,7 @@ def positions():
 # ----------------------------- 下单 + 打印队列 -----------------------------
 @app.route("/api/order", methods=["POST"])
 def order():
+    init_db()
     data = request.get_json(silent=True) or {}
     style = data.get("style", "动漫")
     result_file = data.get("result_file", "")
@@ -243,11 +279,9 @@ def order():
     log_order(conn, pickup, style, gen_ms, "pending", source_file, result_file, print_path)
     conn.close()
 
-    # 加入打印队列
+    # 加入打印队列（后台线程自动处理，不阻塞响应）
     if print_path:
         print_queue.add(print_path, order_id=pickup)
-        # 尝试处理队列
-        print_queue.process_next()
 
     return jsonify(ok=True, pickup_code=pickup, print_file=print_path)
 
@@ -306,7 +340,6 @@ def admin_reprint():
     item_id = data.get("item_id", "")
     new_id = print_queue.reprint(item_id)
     if new_id:
-        print_queue.process_next()
         return jsonify(ok=True, new_item_id=new_id)
     return jsonify(ok=False, error="条目不存在")
 
@@ -315,7 +348,7 @@ def admin_reprint():
 def admin_stats():
     conn = get_db()
     total = conn.execute("SELECT COUNT(*) c FROM orders").fetchone()["c"]
-    ok_n = conn.execute("SELECT COUNT(*) c FROM orders WHERE status='pending'").fetchone()["c"]
+    ok_n = conn.execute("SELECT COUNT(*) c FROM orders WHERE error IS NULL OR error = ''").fetchone()["c"]
     avg_ms = conn.execute("SELECT AVG(gen_ms) a FROM orders").fetchone()["a"]
     conn.close()
     err_summary = failure_logger.get_summary() if failure_logger else {"total": 0, "by_type": {}}
