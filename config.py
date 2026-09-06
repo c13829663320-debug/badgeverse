@@ -21,36 +21,42 @@ STYLES = {
         "gender": "female",
         "emoji": "🌸",
         "gradient": "linear-gradient(135deg, #ff9a9e, #fad0c4)",
+        "preview": "/static/style_previews/anime_girl.jpg",
     },
     "动漫少年": {
         "prompt": "japanese anime style, vibrant colors, sharp line art, cool confident expression, detailed eyes, portrait",
         "gender": "male",
         "emoji": "⚔️",
         "gradient": "linear-gradient(135deg, #667eea, #764ba2)",
+        "preview": "/static/style_previews/anime_boy.jpg",
     },
     "油画质感": {
         "prompt": "classical oil painting, impressionist, rich brushstroke texture, renaissance portrait, warm lighting",
         "gender": "neutral",
         "emoji": "🎨",
         "gradient": "linear-gradient(135deg, #f6d365, #fda085)",
+        "preview": "/static/style_previews/oil.jpg",
     },
     "东方水墨": {
         "prompt": "traditional chinese ink wash painting, elegant, minimalist, bamboo and mist, portrait",
         "gender": "neutral",
         "emoji": "🎋",
         "gradient": "linear-gradient(135deg, #2c3e50, #4ca1af)",
+        "preview": "/static/style_previews/ink.jpg",
     },
     "赛博朋克": {
         "prompt": "cyberpunk style, neon glow, futuristic, cinematic lighting, holographic, portrait",
         "gender": "neutral",
         "emoji": "🌃",
         "gradient": "linear-gradient(135deg, #ee0979, #ff6a00)",
+        "preview": "/static/style_previews/cyber.jpg",
     },
     "水彩梦境": {
         "prompt": "soft watercolor painting, dreamy, pastel colors, gentle blending, artistic portrait",
         "gender": "neutral",
         "emoji": "💧",
         "gradient": "linear-gradient(135deg, #a8edea, #fed6e3)",
+        "preview": "/static/style_previews/watercolor.jpg",
     },
 }
 

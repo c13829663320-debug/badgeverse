@@ -28,7 +28,7 @@ from modules.order_manager import OrderManager
 
 import threading
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12MB
 
 # ----------------------------- 全局单例 -----------------------------
