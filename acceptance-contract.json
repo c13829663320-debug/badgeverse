@@ -1,0 +1,134 @@
+{
+  "version": "1",
+  "scope": "project",
+  "items": [
+    {
+      "id": "moderation",
+      "scenario": "上传图片经阶跃视觉模型判定安全性，返回 {safe, category, confidence}，涉黄/涉暴/涉政图片被拦截",
+      "check_type": "test",
+      "expect": "tests/test_moderation.py 全部通过：安全图片返回 safe=True，不合规图片返回 safe=False 且 category 非空",
+      "verifier": "python run_tests.py tests/test_moderation.py -q",
+      "status": "todo",
+      "depends_on": []
+    },
+    {
+      "id": "text_overlay",
+      "scenario": "文字叠加到圆面纸：中英文混排，可选字体/颜色/位置，渲染后文字清晰可见且不超出圆形边界",
+      "check_type": "test",
+      "expect": "tests/test_text_overlay.py 全部通过：各字体/颜色/位置组合渲染正确，文字不超出圆形裁切区",
+      "verifier": "python run_tests.py tests/test_text_overlay.py -q",
+      "status": "todo",
+      "depends_on": []
+    },
+    {
+      "id": "print_queue",
+      "scenario": "静默打印队列：Windows驱动直连TS5380，状态机 queued→printing→done/error，每版后5秒间歇(后台可调)，支持手动重打印",
+      "check_type": "test",
+      "expect": "tests/test_print_queue.py 全部通过：状态机转换正确，间歇可配置，重打印生成新队列条目",
+      "verifier": "python run_tests.py tests/test_print_queue.py -q",
+      "status": "todo",
+      "depends_on": []
+    },
+    {
+      "id": "offline_fallback",
+      "scenario": "断网兜底：活动主题图样走数字通道（圆裁→排队→静默打印），后台开关可切换在线/兜底模式",
+      "check_type": "test",
+      "expect": "tests/test_offline_fallback.py 全部通过：兜底模式用活动图样生成圆面纸并入队打印",
+      "verifier": "python run_tests.py tests/test_offline_fallback.py -q",
+      "status": "todo",
+      "depends_on": [
+        "print_queue"
+      ]
+    },
+    {
+      "id": "concurrency",
+      "scenario": "多用户同时下单：阶跃API真正并发不排队，线程安全订单处理，不丢单不串单",
+      "check_type": "test",
+      "expect": "tests/test_concurrency.py 全部通过：3个并发请求各自获得独立订单和取件号，无数据竞争",
+      "verifier": "python run_tests.py tests/test_concurrency.py -q",
+      "status": "todo",
+      "depends_on": []
+    },
+    {
+      "id": "failure_logging",
+      "scenario": "失败日志增强：订单表补全error字段，错误日志独立表，/api/errors可查询",
+      "check_type": "test",
+      "expect": "tests/test_failure_logging.py 全部通过：生成失败时error写入订单表+错误日志表，API可查",
+      "verifier": "python run_tests.py tests/test_failure_logging.py -q",
+      "status": "todo",
+      "depends_on": []
+    },
+    {
+      "id": "admin_api",
+      "scenario": "后台管理API扩展：打印队列状态、断网开关、重打印、限流调节、错误日志查询",
+      "check_type": "test",
+      "expect": "tests/test_admin_api.py 全部通过：各API端点返回正确数据，开关切换生效",
+      "verifier": "python run_tests.py tests/test_admin_api.py -q",
+      "status": "todo",
+      "depends_on": [
+        "print_queue",
+        "offline_fallback",
+        "failure_logging"
+      ]
+    },
+    {
+      "id": "h5_ui",
+      "scenario": "H5前端重构：年轻潮流视觉语言，移动端自适应，完整全流程交互（上传→审核→选风格→生成→文字叠加→下单→取件号）",
+      "check_type": "test",
+      "expect": "tests/test_h5_ui.py 全部通过：页面结构断言（BeautifulSoup）验证各步骤元素存在、样式类名正确、移动端viewport配置正确",
+      "verifier": "python run_tests.py tests/test_h5_ui.py -q",
+      "status": "todo",
+      "depends_on": [
+        "moderation",
+        "text_overlay"
+      ]
+    },
+    {
+      "id": "text_overlay_ui",
+      "scenario": "文字叠加H5交互：输入框+字体选择器+颜色选择器+位置选择器+实时预览",
+      "check_type": "test",
+      "expect": "tests/test_text_overlay_ui.py 全部通过：H5内文字叠加控件结构完整，选字体/颜色/位置控件存在",
+      "verifier": "python run_tests.py tests/test_text_overlay_ui.py -q",
+      "status": "todo",
+      "depends_on": [
+        "text_overlay",
+        "h5_ui"
+      ]
+    },
+    {
+      "id": "admin_page",
+      "scenario": "后台管理页：实时订单列表、成功率/平均耗时看板、打印队列状态、错误日志、断网开关、重打印按钮、限流间歇调节滑块",
+      "check_type": "test",
+      "expect": "tests/test_admin_page.py 全部通过：页面结构断言验证看板卡片、订单表格、队列状态区、日志区、开关/按钮/滑块控件存在",
+      "verifier": "python run_tests.py tests/test_admin_page.py -q",
+      "status": "todo",
+      "depends_on": [
+        "admin_api"
+      ]
+    },
+    {
+      "id": "integration_e2e",
+      "scenario": "全链路集成：上传→审核→生成→文字叠加→下单→打印队列→静默打印→取件，DoD逐项验收",
+      "check_type": "smoke",
+      "expect": "tests/test_integration.py 全部通过：完整链路无报错，各环节产物文件存在且尺寸正确",
+      "verifier": "python run_tests.py tests/test_integration.py -q",
+      "status": "todo",
+      "depends_on": [
+        "moderation",
+        "text_overlay",
+        "print_queue",
+        "offline_fallback",
+        "concurrency",
+        "failure_logging",
+        "admin_api",
+        "h5_ui",
+        "text_overlay_ui",
+        "admin_page"
+      ]
+    }
+  ],
+  "attestation": {
+    "hash": "sha256:c0a6a5ca5a7852ea63dfc54dc811388a094162acafc4163ce5ee711f420a425d",
+    "attested_at": "2026-09-06T11:26:41.019663+00:00"
+  }
+}

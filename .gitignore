@@ -35,3 +35,8 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# red-green-mode runtime artifacts
+.rgm-ledger.json
+.rgm/
+*.diff
