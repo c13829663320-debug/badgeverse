@@ -44,3 +44,9 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 # 单张生成超时（秒）与重试次数（验收：单张<=15s，失败自动重试2次）
 GENERATE_TIMEOUT = 30
 GENERATE_RETRIES = 2
+
+# 打印队列间歇（秒），每版后停 N 秒，后台可调
+PRINT_INTERVAL = int(os.environ.get("PRINT_INTERVAL", "5"))
+
+# 打印机名（空 = 系统默认打印机）
+PRINTER_NAME = os.environ.get("PRINTER_NAME", "")

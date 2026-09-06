@@ -26,7 +26,7 @@
       "check_type": "test",
       "expect": "tests/test_print_queue.py 全部通过：状态机转换正确，间歇可配置，重打印生成新队列条目",
       "verifier": "python run_tests.py tests/test_print_queue.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": []
     },
     {
@@ -35,7 +35,7 @@
       "check_type": "test",
       "expect": "tests/test_offline_fallback.py 全部通过：兜底模式用活动图样生成圆面纸并入队打印",
       "verifier": "python run_tests.py tests/test_offline_fallback.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": [
         "print_queue"
       ]
@@ -46,7 +46,7 @@
       "check_type": "test",
       "expect": "tests/test_concurrency.py 全部通过：3个并发请求各自获得独立订单和取件号，无数据竞争",
       "verifier": "python run_tests.py tests/test_concurrency.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": []
     },
     {
@@ -55,7 +55,7 @@
       "check_type": "test",
       "expect": "tests/test_failure_logging.py 全部通过：生成失败时error写入订单表+错误日志表，API可查",
       "verifier": "python run_tests.py tests/test_failure_logging.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": []
     },
     {
@@ -64,7 +64,7 @@
       "check_type": "test",
       "expect": "tests/test_admin_api.py 全部通过：各API端点返回正确数据，开关切换生效",
       "verifier": "python run_tests.py tests/test_admin_api.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": [
         "print_queue",
         "offline_fallback",
