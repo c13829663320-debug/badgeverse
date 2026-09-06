@@ -175,6 +175,9 @@ def generate():
         from PIL import Image
         img = Image.open(result_path)
         img = add_text_to_image(img, text, font_index, color_name, position_name)
+        # RGBA → RGB（JPEG 不支持透明通道）
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGB")
         img.save(result_path, "JPEG", quality=95)
 
     return jsonify(

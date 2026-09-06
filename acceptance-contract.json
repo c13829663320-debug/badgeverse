@@ -112,7 +112,7 @@
       "check_type": "smoke",
       "expect": "tests/test_integration.py 全部通过：完整链路无报错，各环节产物文件存在且尺寸正确",
       "verifier": "python run_tests.py tests/test_integration.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": [
         "moderation",
         "text_overlay",
