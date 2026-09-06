@@ -35,7 +35,8 @@
   .progress-bar{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px}
   .step-dot{width:28px;height:28px;border-radius:50%;
     background:var(--card2);display:flex;align-items:center;justify-content:center;
-    font-size:12px;font-weight:700;color:var(--muted2);transition:all .4s;border:2px solid transparent}
+    font-size:12px;font-weight:700;color:var(--muted2);transition:all .4s;
+    border:2px solid transparent;overflow:hidden;flex-shrink:0}
   .step-dot.active{background:linear-gradient(135deg,var(--accent),var(--accent2));
     color:#fff;transform:scale(1.15);box-shadow:0 0 12px rgba(124,58,237,0.5)}
   .step-dot.done{background:var(--success);color:#fff}
@@ -76,19 +77,19 @@
     width:22px;height:22px;border-radius:50%;background:var(--success);color:#fff;
     font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
 
-  /* Preview circle */
-  .preview-circle{width:160px;height:160px;border-radius:50%;margin:16px auto;
+  .preview-circle{width:140px;height:140px;border-radius:50%;margin:0 auto;
     border:3px solid var(--accent);overflow:hidden;background:var(--card2);
     display:flex;align-items:center;justify-content:center;position:relative}
   .preview-circle img{width:100%;height:100%;object-fit:cover}
   .preview-circle .ph{color:var(--muted2);font-size:13px;text-align:center}
 
   /* Upload */
-  .upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);
-    padding:36px 20px;text-align:center;cursor:pointer;transition:all .3s}
+  .upload-zone{display:block;border:2px dashed var(--border);border-radius:14px;
+    padding:32px 20px;text-align:center;cursor:pointer;transition:all .3s;
+    overflow:hidden;position:relative}
   .upload-zone:active{border-color:var(--accent);background:rgba(124,58,237,0.05)}
   .upload-zone input[type=file]{display:none}
-  .upload-icon{font-size:36px;margin-bottom:8px}
+  .upload-icon{font-size:40px;margin-bottom:8px}
   .upload-text{color:var(--muted);font-size:14px}
   .upload-hint{color:var(--muted2);font-size:12px;margin-top:4px}
 
@@ -102,7 +103,7 @@
   .select-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 
   /* Canvas preview */
-  #canvas-preview{display:block;width:160px;height:160px;margin:12px auto;
+  #canvas-preview{display:block;width:140px;height:140px;margin:12px auto;
     border-radius:50%;border:2px solid var(--border);background:var(--card2)}
 
   /* Buttons */
@@ -112,7 +113,7 @@
   .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
   .btn-ghost{background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;padding:14px}
   .btn-row{display:flex;gap:8px}
-  .btn-row .btn{flex:1}
+  .btn-row .btn{flex:1;width:auto}
   .btn:disabled{opacity:0.4;cursor:not-allowed}
 
   /* Loading */
@@ -181,19 +182,19 @@
   <div class="step-section" id="step-2">
     <div class="card">
       <div class="card-title"><span class="icon">📸</span> 上传你的照片</div>
-      <label class="upload-zone" id="upload-zone">
-        <div id="upload-default">
-          <div class="upload-icon">📷</div>
-          <div class="upload-text">点击拍照或从相册选择</div>
-          <div class="upload-hint">支持 JPG / PNG，建议正面清晰照</div>
+    <label class="upload-zone" id="upload-zone">
+      <div id="upload-default">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">点击拍照或从相册选择</div>
+        <div class="upload-hint">支持 JPG / PNG，建议正面清晰照</div>
+      </div>
+      <div id="upload-done" style="display:none">
+        <div class="preview-circle">
+          <img id="person-img" src="" alt="">
         </div>
-        <div id="upload-done" style="display:none">
-          <div class="preview-circle" style="margin:0">
-            <img id="person-img" src="" alt="">
-          </div>
-        </div>
-        <input type="file" id="file-input" accept="image/*">
-      </label>
+      </div>
+      <input type="file" id="file-input" accept="image/*">
+    </label>
     </div>
     <div class="btn-row">
       <button class="btn btn-ghost" id="btn-2-back">上一步</button>
