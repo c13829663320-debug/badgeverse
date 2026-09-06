@@ -23,9 +23,9 @@ start "BadgeVerse-Flask" /min python "E:\jieyueAI\badgeverse_mvp\badgeverse_mvp\
 :: 等待 Flask 就绪
 timeout /t 6 /nobreak >nul
 
-:: 启动 SSH 隧道（新窗口）
+:: 启动 SSH 隧道（新窗口）— 用 localhost.run（无安全拦截页）
 echo [3/4] 启动公网隧道...
-start "BadgeVerse-Tunnel" /min ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:5000 serveo.net
+start "BadgeVerse-Tunnel" /min ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:5000 nokey@localhost.run
 
 :: 等待隧道建立
 timeout /t 12 /nobreak >nul
