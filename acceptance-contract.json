@@ -8,7 +8,7 @@
       "check_type": "test",
       "expect": "tests/test_moderation.py 全部通过：安全图片返回 safe=True，不合规图片返回 safe=False 且 category 非空",
       "verifier": "python run_tests.py tests/test_moderation.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": []
     },
     {
