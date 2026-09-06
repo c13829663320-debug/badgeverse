@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BadgeVerse 管理后台</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0f1117;color:#e0e0e0;font-family:-apple-system,"Microsoft YaHei",sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  .header h1{font-size:22px;color:#7c3aed}
+  .header a{color:#ec4899;text-decoration:none;font-size:14px}
+  .dashboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+  .stat-card{background:#1a1a2e;border-radius:14px;padding:18px;border:1px solid #222244}
+  .stat-card .label{color:#8888aa;font-size:13px}
+  .stat-card .value{font-size:28px;font-weight:700;color:#ec4899;margin-top:4px}
+  .stat-card .sub{color:#666688;font-size:12px;margin-top:2px}
+  .section{background:#1a1a2e;border-radius:14px;padding:18px;margin-bottom:16px;border:1px solid #222244}
+  .section h2{font-size:15px;color:#7c3aed;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #222244;font-size:13px}
+  th{color:#8888aa;font-weight:600}
+  .queue-status{display:flex;gap:20px;flex-wrap:wrap}
+  .queue-item{text-align:center}
+  .queue-item .num{font-size:24px;font-weight:700}
+  .queue-item .lbl{font-size:12px;color:#8888aa}
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .toggle-row label{font-size:14px;min-width:100px}
+  input[type=range]{width:200px;accent-color:#7c3aed}
+  .btn{background:#7c3aed;border:none;border-radius:8px;padding:8px 16px;color:#fff;cursor:pointer;font-size:13px}
+  .btn:hover{background:#6d28d9}
+  .btn:disabled{opacity:0.5}
+  .error-entry{background:#1a1a1a;border-radius:8px;padding:10px;margin-bottom:6px;font-size:12px;border-left:3px solid #ef4444}
+  .error-entry .type{color:#ef4444;font-weight:600}
+  .error-entry .detail{color:#aaaacc;margin-top:2px}
+  .empty{color:#666688;font-size:13px;text-align:center;padding:12px}
+  #interval-value{color:#ec4899;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>BadgeVerse 管理后台</h1>
+    <a href="/">返回前台</a>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <div class="stat-card"><div class="label">总订单数</div><div class="value" id="stat-total">0</div></div>
+    <div class="stat-card"><div class="label">成功率</div><div class="value" id="stat-success-rate">0%</div><div class="sub" id="stat-success">0 / 0</div></div>
+    <div class="stat-card"><div class="label">平均生成耗时</div><div class="value" id="stat-avg-ms">0s</div></div>
+    <div class="stat-card"><div class="label">错误总数</div><div class="value" id="stat-errors">0</div></div>
+  </div>
+
+  <div class="section">
+    <h2>打印队列状态</h2>
+    <div class="queue-status" id="queue-status">
+      <div class="queue-item"><div class="num" id="q-queued">0</div><div class="lbl">排队中</div></div>
+      <div class="queue-item"><div class="num" id="q-done">0</div><div class="lbl">已完成</div></div>
+      <div class="queue-item"><div class="num" id="q-error">0</div><div class="lbl">失败</div></div>
+      <div class="queue-item"><div class="num" id="q-total">0</div><div class="lbl">总计</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>控制面板</h2>
+    <div class="toggle-row">
+      <label>断网兜底</label>
+      <input type="checkbox" id="offline-toggle">
+      <span style="font-size:12px;color:#8888aa" id="offline-label">关闭</span>
+    </div>
+    <div class="toggle-row">
+      <label>打印间歇</label>
+      <input type="range" id="interval-slider" min="0" max="30" value="5">
+      <span id="interval-value">5秒</span>
+    </div>
+    <div class="toggle-row">
+      <label>重打印</label>
+      <input type="text" id="reprint-id" placeholder="输入队列条目 ID" style="flex:1;background:#222244;border:1px solid #333;border-radius:6px;padding:6px 10px;color:#e0e0e0;font-size:13px">
+      <button class="btn" id="btn-reprint">重打印</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>订单列表</h2>
+    <table id="order-table">
+      <thead>
+        <tr><th>取件号</th><th>风格</th><th>生成耗时</th><th>状态</th><th>时间</th></tr>
+      </thead>
+      <tbody id="order-list"><tr><td colspan="5" class="empty">暂无订单</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>错误日志</h2>
+    <div id="error-log"><div class="empty">暂无错误</div></div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+async function loadStats(){
+  try{
+    const d=await fetch('/api/admin/stats').then(r=>r.json());
+    $('#stat-total').textContent=d.total||0;
+    const rate=d.total>0?Math.round(d.success/d.total*100):0;
+    $('#stat-success-rate').textContent=rate+'%';
+    $('#stat-success').textContent=(d.success||0)+' / '+(d.total||0);
+    $('#stat-avg-ms').textContent=((d.avg_gen_ms||0)/1000).toFixed(1)+'s';
+    $('#stat-errors').textContent=d.error_summary?.total||0;
+    $('#q-queued').textContent=d.queue?.queued||0;
+    $('#q-done').textContent=d.queue?.done||0;
+    $('#q-error').textContent=d.queue?.error||0;
+    $('#q-total').textContent=d.queue?.total||0;
+    $('#offline-toggle').checked=d.offline||false;
+    $('#offline-label').textContent=d.offline?'开启':'关闭';
+    $('#interval-slider').value=d.interval_seconds||5;
+    $('#interval-value').textContent=(d.interval_seconds||5)+'秒';
+  }catch(e){}
+}
+async function loadOrders(){
+  try{
+    const d=await fetch('/api/orders').then(r=>r.json());
+    const tb=$('#order-list');
+    if(!d.orders||!d.orders.length){tb.innerHTML='<tr><td colspan="5" class="empty">暂无订单</td></tr>';return}
+    tb.innerHTML=d.orders.map(o=>`<tr><td>${o.pickup_code||''}</td><td>${o.style||''}</td><td>${(o.gen_ms||0)/1000}s</td><td>${o.status||''}</td><td>${(o.created_at||'').slice(5,16)}</td></tr>`).join('');
+  }catch(e){}
+}
+async function loadErrors(){
+  try{
+    const d=await fetch('/api/admin/errors').then(r=>r.json());
+    const el=$('#error-log');
+    if(!d||!d.length){el.innerHTML='<div class="empty">暂无错误</div>';return}
+    el.innerHTML=d.map(e=>`<div class="error-entry"><span class="type">${e.error_type}</span> <span style="color:#666688">${e.order_id}</span><div class="detail">${e.error_detail||''}</div></div>`).join('');
+  }catch(e){}
+}
+$('#offline-toggle').addEventListener('change',async e=>{
+  const r=await fetch('/api/admin/offline',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offline:e.target.checked})});
+  const d=await r.json();
+  $('#offline-label').textContent=d.offline?'开启':'关闭';
+});
+$('#interval-slider').addEventListener('change',async e=>{
+  const r=await fetch('/api/admin/interval',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seconds:parseInt(e.target.value)})});
+  const d=await r.json();
+  $('#interval-value').textContent=(d.interval_seconds||0)+'秒';
+});
+$('#btn-reprint').addEventListener('click',async()=>{
+  const id=$('#reprint-id').value.trim(); if(!id)return;
+  const r=await fetch('/api/admin/reprint',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item_id:id})});
+  const d=await r.json();
+  if(d.ok){alert('重打印已加入队列');loadStats()}else{alert('条目不存在')}
+});
+loadStats();loadOrders();loadErrors();
+setInterval(()=>{loadStats();loadOrders();loadErrors()},5000);
+</script>
+</body>
+</html>

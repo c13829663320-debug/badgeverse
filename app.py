@@ -92,7 +92,11 @@ def log_order(conn, pickup_code, style, gen_ms, status, source_file, result_file
 # ----------------------------- 页面 -----------------------------
 @app.route("/")
 def index():
-    return render_template("index.html", styles=config.STYLES)
+    from modules.text_overlay import get_available_fonts, get_available_colors, get_available_positions
+    return render_template("index.html", styles=config.STYLES,
+                           fonts=get_available_fonts(),
+                           colors=get_available_colors(),
+                           positions=get_available_positions())
 
 
 @app.route("/admin")

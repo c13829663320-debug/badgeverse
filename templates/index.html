@@ -3,153 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>吧唧星球 · BadgeVerse</title>
+<title>吧唧星球 BadgeVerse</title>
 <style>
+  *{margin:0;padding:0;box-sizing:border-box}
   :root{
-    --bg:#0f1220; --card:#191d33; --accent:#ff6f9c; --accent2:#7c5cff;
-    --text:#f4f5ff; --muted:#9aa0c0; --ok:#3ddc97; --err:#ff6b6b;
+    --bg:#0f0f1a;--card:#1a1a2e;--accent:#7c3aed;--accent2:#ec4899;
+    --text:#f0f0f0;--muted:#8888aa;--radius:20px;
   }
-  *{box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
-  body{background:linear-gradient(160deg,#0f1220,#1a1030 60%,#241040); color:var(--text); min-height:100vh; padding:18px 16px 40px;}
-  .wrap{max-width:480px; margin:0 auto;}
-  h1{font-size:22px; font-weight:800; letter-spacing:.5px;}
-  .sub{color:var(--muted); font-size:13px; margin-top:4px;}
-  .step{display:flex; gap:10px; align-items:center; margin:16px 0 8px;}
-  .step .num{width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
-  .step .t{font-weight:700;font-size:15px;}
-  .card{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px; margin-bottom:14px;}
-  .upload{border:2px dashed rgba(255,255,255,.2); border-radius:14px; padding:26px; text-align:center; cursor:pointer; color:var(--muted); font-size:14px; transition:.2s;}
-  .upload.active{border-color:var(--accent); background:rgba(255,111,156,.08);}
-  .upload img{max-width:100%; border-radius:12px; display:none; margin-bottom:8px;}
-  .styles{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
-  .style{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:14px 10px; border-radius:12px; text-align:center; cursor:pointer; font-size:14px; transition:.15s;}
-  .style.sel{background:var(--accent2); border-color:var(--accent2); color:#fff; font-weight:700;}
-  .btn{width:100%; padding:15px; border:none; border-radius:14px; font-size:16px; font-weight:700; color:#fff; margin-top:12px; cursor:pointer; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:.2s;}
-  .btn:disabled{opacity:.5; cursor:not-allowed;}
-  .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,.2);}
-  .preview{display:none; text-align:center;}
-  .preview img{max-width:100%; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.4);}
-  .badge{display:none; text-align:center; padding:18px;}
-  .badge .code{font-size:30px; font-weight:800; letter-spacing:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:8px 0;}
-  .status{margin-top:10px; font-size:13px; color:var(--muted);}
-  .status.err{color:var(--err);}
-  .loading{display:none; text-align:center; color:var(--muted); margin-top:12px;}
-  .spinner{width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--accent);border-radius:50%;display:inline-block;vertical-align:middle;animation:spin .8s linear infinite;margin-right:8px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .foot{text-align:center; color:var(--muted); font-size:11px; margin-top:30px; line-height:1.7;}
+  body{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 50%,#16213e 100%);
+    color:var(--text);font-family:-apple-system,"Microsoft YaHei",sans-serif;
+    min-height:100vh;overflow-x:hidden}
+  .container{max-width:480px;margin:0 auto;padding:16px}
+  .header{text-align:center;padding:24px 0 16px}
+  .header h1{font-size:28px;font-weight:800;
+    background:linear-gradient(90deg,#7c3aed,#ec4899);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .header p{color:var(--muted);font-size:13px;margin-top:4px}
+  .card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+  .card h2{font-size:16px;margin-bottom:12px;color:var(--accent2)}
+  .upload-area{border:2px dashed #444466;border-radius:var(--radius);padding:32px;
+    text-align:center;cursor:pointer;transition:border-color .3s}
+  .upload-area:hover{border-color:var(--accent)}
+  .upload-area input[type=file]{display:none}
+  .upload-icon{font-size:40px;color:var(--accent);margin-bottom:8px}
+  .upload-text{color:var(--muted);font-size:14px}
+  .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .style-btn{background:#222244;border:2px solid transparent;border-radius:14px;
+    padding:14px;text-align:center;cursor:pointer;transition:all .3s;font-size:15px}
+  .style-btn.active{border-color:var(--accent2);background:rgba(124,58,237,0.15)}
+  .style-btn:active{transform:scale(0.95)}
+  .input-group{margin-bottom:12px}
+  .input-group label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .input-group input,.input-group select{
+    width:100%;background:#222244;border:1px solid #333355;
+    border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px}
+  .select-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .btn-primary{width:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:14px;padding:16px;color:#fff;font-size:17px;font-weight:700;
+    cursor:pointer;transition:transform .2s}
+  .btn-primary:active{transform:scale(0.97)}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+  .result-preview{width:200px;height:200px;border-radius:50%;margin:16px auto;
+    border:3px solid var(--accent);overflow:hidden;display:none}
+  .result-preview img{width:100%;height:100%;object-fit:cover}
+  .pickup-display{text-align:center;padding:20px;display:none}
+  .pickup-code{font-size:24px;font-weight:800;color:var(--accent2);letter-spacing:2px}
+  .pickup-label{color:var(--muted);font-size:13px;margin-top:4px}
+  #canvas-preview{width:200px;height:200px;border-radius:50%;margin:12px auto;
+    border:2px solid #333355;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .loading{display:none;text-align:center;padding:20px}
+  .spinner{width:40px;height:40px;border:3px solid #333355;border-top-color:var(--accent2);
+    border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .step-num{display:inline-block;width:24px;height:24px;border-radius:50%;
+    background:var(--accent);color:#fff;text-align:center;line-height:24px;
+    font-size:13px;margin-right:6px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>吧唧星球 · BadgeVerse</h1>
-  <div class="sub">60 秒，把此刻的自己，变成一枚能别在胸口的记忆。</div>
+<div class="container">
+  <div class="header">
+    <h1>吧唧星球</h1>
+    <p>AI 现场自贩终端 · 拍照即做你的专属吧唧</p>
+  </div>
 
-  <!-- Step1 上传 -->
-  <div class="step"><div class="num">1</div><div class="t">上传一张照片</div></div>
   <div class="card">
-    <div class="upload" id="uploadBox">
-      <div id="uploadHint">点击选择或拍摄照片（正脸，≤10MB）</div>
-      <img id="uploadPreview" alt="">
+    <h2><span class="step-num">1</span>上传照片</h2>
+    <label class="upload-area" id="upload-area">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text">点击拍照或选择图片</div>
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" capture="user">
+    </label>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">2</span>选风格</h2>
+    <div class="style-grid">
+      {% for name in styles.keys() %}
+      <div class="style-btn" data-style="{{ name }}">{{ name }}</div>
+      {% endfor %}
     </div>
-    <input type="file" id="fileInput" accept="image/*" hidden>
   </div>
 
-  <!-- Step2 选风格 -->
-  <div class="step"><div class="num">2</div><div class="t">选择风格</div></div>
   <div class="card">
-    <div class="styles" id="styles"></div>
+    <h2><span class="step-num">3</span>加文字（可选）</h2>
+    <div class="input-group">
+      <label>输入文字（中英文混排）</label>
+      <input type="text" id="text-input" name="badge-text" placeholder="如：BadgeVerse 2026" maxlength="20">
+    </div>
+    <div class="select-row">
+      <div class="input-group">
+        <label>字体</label>
+        <select id="font-select">
+          {% for f in fonts %}
+          <option value="{{ loop.index0 }}">{{ f.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="input-group">
+        <label>颜色</label>
+        <select id="color-select">
+          {% for c in colors %}
+          <option value="{{ c.name }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="input-group">
+        <label>位置</label>
+        <select id="position-select">
+          {% for p in positions %}
+          <option value="{{ p.name }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div id="canvas-preview" class="live-preview">
+      <span style="color:var(--muted);font-size:12px">预览区</span>
+    </div>
   </div>
 
-  <!-- Step3 生成 -->
-  <button class="btn" id="genBtn" disabled>✨ 生成我的吧唧</button>
-  <div class="loading" id="loading"><span class="spinner"></span>正在生成，约 15 秒…</div>
-  <div class="status" id="status"></div>
-
-  <!-- 预览 -->
-  <div class="preview card" id="previewBox">
-    <p style="text-align:left;font-weight:700;margin-bottom:10px;">预览 · 确认</p>
-    <img id="previewImg" alt="">
-    <div id="mockHint" class="status"></div>
-    <button class="btn" id="orderBtn">提交订单 · 免费体验</button>
+  <div class="card">
+    <button class="btn-primary" id="btn-generate" disabled>生成我的吧唧</button>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div style="color:var(--muted);font-size:14px">AI 创作中...</div>
+    </div>
   </div>
 
-  <!-- 取件号 -->
-  <div class="badge card" id="badgeBox">
-    <p style="color:var(--muted);font-size:13px;">取件号（现场凭此取件）</p>
-    <div class="code" id="pickupCode">--</div>
-    <p style="color:var(--muted);font-size:12px;">请截图保存取件号，现场叫号交付</p>
-    <button class="btn ghost" id="againBtn">再来一枚</button>
+  <div class="card">
+    <h2><span class="step-num">4</span>查看结果</h2>
+    <div class="result-preview" id="result-preview">
+      <img id="result-img" src="" alt="">
+    </div>
+    <div class="pickup-display" id="pickup-code">
+      <div class="pickup-label">取件号</div>
+      <div class="pickup-code" id="pickup-code-text"></div>
+    </div>
   </div>
-
-  <div class="foot">免费体验 · 现场打印 · 覆膜圆裁压制交付<br>吧唧星球 BadgeVerse · 参赛 MVP</div>
 </div>
 
 <script>
-const styles = {{ styles_json | safe }};
-let fileId=null, resultFile=null, sourceFile=null, genMs=0, currentStyle="动漫", selStyle="动漫";
-
-// build style buttons
-const stylesEl = document.getElementById("styles");
-Object.keys(styles).forEach(name=>{
-  const div=document.createElement("div"); div.className="style"; div.textContent=name;
-  if(name===selStyle) div.classList.add("sel");
-  div.onclick=()=>{ document.querySelectorAll(".style").forEach(s=>s.classList.remove("sel")); div.classList.add("sel"); selStyle=name; currentStyle=name; };
-  stylesEl.appendChild(div);
+let fileId=null, selectedStyle=null;
+const $=s=>document.querySelector(s);
+// 风格选择
+document.querySelectorAll('.style-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.style-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedStyle=btn.dataset.style;
+    $('#btn-generate').disabled=!fileId||!selectedStyle;
+  });
 });
-
-// upload
-const box=document.getElementById("uploadBox"), input=document.getElementById("fileInput");
-box.onclick=()=>input.click();
-input.onchange=async e=>{
+// 上传
+$('#file-input').addEventListener('change',async e=>{
   const f=e.target.files[0]; if(!f) return;
-  const fd=new FormData(); fd.append("file",f);
-  setStatus("上传中…");
-  const r=await fetch("/api/upload",{method:"POST",body:fd});
-  const j=await r.json();
-  if(!j.ok){ setStatus(j.error||"上传失败",true); return; }
-  fileId=j.file_id; sourceFile=j.file_path;
-  document.getElementById("uploadPreview").src=URL.createObjectURL(f);
-  document.getElementById("uploadPreview").style.display="block";
-  document.getElementById("uploadHint").textContent=f.name;
-  box.classList.add("active");
-  document.getElementById("genBtn").disabled=false;
-  setStatus("照片已就绪 ✓");
-};
-
-// generate
-document.getElementById("genBtn").onclick=async()=>{
-  if(!fileId) return;
-  document.getElementById("genBtn").disabled=true;
-  document.getElementById("loading").style.display="block";
-  setStatus("AI 风格化生成中，请稍候…");
-  const r=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({file_id:fileId,style:currentStyle})});
-  const j=await r.json();
-  document.getElementById("loading").style.display="none";
-  document.getElementById("genBtn").disabled=false;
-  if(!j.ok){ setStatus(j.error||"生成失败",true); return; }
-  resultFile=j.result_url; genMs=j.gen_ms;
-  document.getElementById("previewImg").src=j.result_url;
-  document.getElementById("previewBox").style.display="block";
-  document.getElementById("mockHint").textContent=j.mock?"（当前为演示模式生成，接阶跃API后为真实风格化）":"";
-  setStatus("生成成功，耗时 "+(j.gen_ms/1000).toFixed(1)+" 秒 ✓");
-  document.getElementById("badgeBox").style.display="none";
-};
-
-// order
-document.getElementById("orderBtn").onclick=async()=>{
-  const r=await fetch("/api/order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({style:currentStyle,result_file:resultFile,source_file:sourceFile,gen_ms:genMs})});
-  const j=await r.json();
-  if(!j.ok){ setStatus(j.error||"下单失败",true); return; }
-  document.getElementById("pickupCode").textContent=j.pickup_code;
-  document.getElementById("previewBox").style.display="none";
-  document.getElementById("badgeBox").style.display="block";
-  setStatus("下单成功 ✓");
-};
-
-// again
-document.getElementById("againBtn").onclick=()=>{ location.reload(); };
-
-function setStatus(msg,err){ const s=document.getElementById("status"); s.textContent=msg; s.className="status"+(err?" err":""); }
+  const fd=new FormData(); fd.append('file',f);
+  try{
+    const r=await fetch('/api/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){alert(d.error||'上传失败');return}
+    fileId=d.file_id;
+    $('#btn-generate').disabled=!selectedStyle;
+  }catch(err){alert('网络错误')}
+});
+// 生成
+$('#btn-generate').addEventListener('click',async()=>{
+  $('#btn-generate').style.display='none';
+  $('#loading').style.display='block';
+  try{
+    const body={file_id:fileId,style:selectedStyle};
+    if($('#text-input').value) body.text=$('#text-input').value;
+    if($('#font-select').value) body.font_index=$('#font-select').value;
+    if($('#color-select').value) body.color_name=$('#color-select').value;
+    if($('#position-select').value) body.position_name=$('#position-select').value;
+    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!d.ok){alert(d.error||'生成失败');$('#btn-generate').style.display='block';$('#loading').style.display='none';return}
+    $('#loading').style.display='none';
+    $('#result-preview').style.display='block';
+    $('#result-img').src=d.result_url+'?t='+Date.now();
+    // 下单
+    const or=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({style:selectedStyle,result_file:d.result_url,source_file:fileId,gen_ms:d.gen_ms})});
+    const od=await or.json();
+    if(od.ok){
+      $('#pickup-code').style.display='block';
+      $('#pickup-code-text').textContent=od.pickup_code;
+    }
+  }catch(err){alert('生成失败，请重试');$('#btn-generate').style.display='block';$('#loading').style.display='none'}
+});
+// 加载字体/颜色/位置选项
+async function loadOptions(){
+  try{
+    const[fr,cr,pr]=await Promise.all([
+      fetch('/api/fonts').then(r=>r.json()),
+      fetch('/api/colors').then(r=>r.json()),
+      fetch('/api/positions').then(r=>r.json())
+    ]);
+    if(fr.ok) fr.fonts.forEach((f,i)=>{const o=document.createElement('option');o.value=i;o.textContent=f.name;$('#font-select').appendChild(o)});
+    if(cr.ok) cr.colors.forEach(c=>{const o=document.createElement('option');o.value=c.name;o.textContent=c.name;$('#color-select').appendChild(o)});
+    if(pr.ok) pr.positions.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;$('#position-select').appendChild(o)});
+  }catch(e){}
+}
+loadOptions();
 </script>
 </body>
 </html>

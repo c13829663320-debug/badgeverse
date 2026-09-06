@@ -77,7 +77,7 @@
       "check_type": "test",
       "expect": "tests/test_h5_ui.py 全部通过：页面结构断言（BeautifulSoup）验证各步骤元素存在、样式类名正确、移动端viewport配置正确",
       "verifier": "python run_tests.py tests/test_h5_ui.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": [
         "moderation",
         "text_overlay"
@@ -89,7 +89,7 @@
       "check_type": "test",
       "expect": "tests/test_text_overlay_ui.py 全部通过：H5内文字叠加控件结构完整，选字体/颜色/位置控件存在",
       "verifier": "python run_tests.py tests/test_text_overlay_ui.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": [
         "text_overlay",
         "h5_ui"
@@ -101,7 +101,7 @@
       "check_type": "test",
       "expect": "tests/test_admin_page.py 全部通过：页面结构断言验证看板卡片、订单表格、队列状态区、日志区、开关/按钮/滑块控件存在",
       "verifier": "python run_tests.py tests/test_admin_page.py -q",
-      "status": "todo",
+      "status": "green",
       "depends_on": [
         "admin_api"
       ]
